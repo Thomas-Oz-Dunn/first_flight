@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 
-void main() {
-  runApp(const FirstFlightApp());
-}
+void main() => runApp(const FirstFlightApp());
 
 class FirstFlightApp extends StatelessWidget {
   const FirstFlightApp({super.key});
@@ -12,10 +10,65 @@ class FirstFlightApp extends StatelessWidget {
     return MaterialApp(
       title: 'First Flight',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal),
         useMaterial3: true,
       ),
-      home: const CounterPage(title: 'First Flight Home Page'),
+      home: const MainPage(),
+    );
+  }
+}
+
+class MainPage extends StatefulWidget {
+  const MainPage({super.key});
+
+  @override
+  State<MainPage> createState() => _MainPageState();
+}
+
+class _MainPageState extends State<MainPage> {
+  int currentPageIndex = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    const dests = <Widget>[
+        NavigationDestination(
+          selectedIcon: Icon(Icons.home),
+          icon: Icon(Icons.home_outlined),
+          label: 'Home',
+        ),
+        NavigationDestination(
+          selectedIcon: Icon(Icons.square),
+          icon: Icon(Icons.square_outlined),
+          label: 'Counter',
+        ),
+        NavigationDestination(
+          selectedIcon: Icon(Icons.circle),
+          icon: Icon(Icons.circle_outlined),
+          label: 'Second Page',
+        ),
+      ];
+      
+    var pages = <Widget>[
+        Container(
+          alignment: Alignment.center,
+          child: const Text('Page 1'),
+        ),
+        const CounterPage(title: 'Counter Page'),
+        Container(
+          alignment: Alignment.center,
+          child: const Text('Page 2'),
+        ),
+      ];
+    
+    return Scaffold(
+      bottomNavigationBar: NavigationBar(
+        onDestinationSelected: (int index) {
+          setState(() {currentPageIndex = index;});
+        },
+        indicatorColor: Colors.blue[800],
+        selectedIndex: currentPageIndex,
+        destinations: dests,
+      ),
+      body: pages[currentPageIndex],
     );
   }
 }
@@ -30,6 +83,7 @@ class CounterPage extends StatefulWidget {
 }
 
 
+// Store counter when on other pages
 class _CounterPageState extends State<CounterPage> {
   int _counter = 0;
 
