@@ -15,7 +15,7 @@ class FirstFlightApp extends StatelessWidget {
       theme: ThemeData(
         useMaterial3: true,
         primaryColor: Colors.amber[500],
-        hoverColor: Colors.amber[100]
+        hoverColor: Colors.blue[100]
       ),
       home: const MainPage(),
     );
@@ -30,50 +30,88 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPageState extends State<MainPage> {
-  int currentPageIndex = 0;
+  int currentPageIndex = 1;
+
+  void updatePageIndex(int index) {
+      setState(() {currentPageIndex = index;});
+  }
 
   @override
   Widget build(BuildContext context) {
     const navigationDests = <Widget>[
+        NavigationDestination(
+          selectedIcon: Icon(Icons.add),
+          icon: Icon(Icons.add),
+          label: 'Counter',
+        ),
         NavigationDestination(
           selectedIcon: Icon(Icons.home),
           icon: Icon(Icons.home_outlined),
           label: 'Home',
         ),
         NavigationDestination(
-          selectedIcon: Icon(Icons.square),
-          icon: Icon(Icons.square_outlined),
-          label: 'Counter',
-        ),
-        NavigationDestination(
-          selectedIcon: Icon(Icons.circle),
-          icon: Icon(Icons.circle_outlined),
-          label: 'Second Page',
+          selectedIcon: Icon(Icons.abc),
+          icon: Icon(Icons.abc_outlined),
+          label: 'Text',
         ),
       ];
       
     var pages = <Widget>[
-        Container(
-          alignment: Alignment.center,
-          child: const Text('Page 1'),
-        ),
         const CounterPage(title: 'Counter Page'),
         Container(
           alignment: Alignment.center,
-          child: const Text('Page 2'),
+          child: const Text('Home Page'),
+        ),
+        Container(
+          alignment: Alignment.center,
+          child: const Text('Text Page'),
         ),
       ];
     
-    return Scaffold(
+    var layout = Scaffold(
       bottomNavigationBar: NavigationBar(
-        onDestinationSelected: (int index) {
-          setState(() {currentPageIndex = index;});
-        },
+        onDestinationSelected: updatePageIndex,
         indicatorColor: indicatorColor,
         selectedIndex: currentPageIndex,
         destinations: navigationDests,
       ),
       body: pages[currentPageIndex],
+    );
+
+    return layout;
+  }
+}
+
+// Text Field Page
+class TextPage extends StatefulWidget {
+  final String title;
+  const TextPage({super.key, required this.title});
+
+  @override
+  State<TextPage> createState() => _TextPageState();
+}
+
+class _TextPageState extends State<TextPage> {
+  
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      
+      appBar: AppBar(
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        title: Text(widget.title),
+      ),
+
+      body: const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.max,
+          children: <Widget>[
+            Text('Another Page'),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -148,7 +186,7 @@ class _CounterPageState extends State<CounterPage> {
         backgroundColor: Colors.red,
         child: const Icon(Icons.exposure_minus_1),
       ),
-
+      SizedBox(width: 20),
       FloatingActionButton(
         onPressed: _incrementCounter,
         tooltip: 'Increment',
@@ -157,13 +195,7 @@ class _CounterPageState extends State<CounterPage> {
       ), 
     ];
 
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.primary,
-        title: Text(widget.title),
-      ),
-
-      body: Center(
+    var pageBody = Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           mainAxisSize: MainAxisSize.max,
@@ -178,10 +210,10 @@ class _CounterPageState extends State<CounterPage> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: buttons
             ),
-            Column( 
+            SizedBox(height: 20),
+            Row( 
+              mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.center,
-              mainAxisSize: MainAxisSize.max,
-              mainAxisAlignment: MainAxisAlignment.end,
               children: <Widget> [
                 FloatingActionButton(
                   onPressed: _resetCounter,
@@ -193,7 +225,10 @@ class _CounterPageState extends State<CounterPage> {
             ),
           ],
         ),
-      ), 
+      );
+
+    return Scaffold(
+      body: pageBody
     );
   }
 }
