@@ -57,7 +57,7 @@ class _MainPageState extends State<MainPage> {
       ];
       
     var pages = <Widget>[
-        const CounterPage(title: 'Counter Page'),
+        const CounterPage(),
         Container(
           alignment: Alignment.center,
           child: const Text('Home Page'),
@@ -65,7 +65,7 @@ class _MainPageState extends State<MainPage> {
         const TextPage(),
       ];
     
-    var layout = Scaffold(
+    var mainPageLayout = Scaffold(
       bottomNavigationBar: NavigationBar(
         onDestinationSelected: updatePageIndex,
         indicatorColor: indicatorColor,
@@ -75,7 +75,7 @@ class _MainPageState extends State<MainPage> {
       body: pages[currentPageIndex],
     );
 
-    return layout;
+    return mainPageLayout;
   }
 }
 
@@ -97,7 +97,10 @@ class TextPage extends StatelessWidget {
         mainAxisSize: MainAxisSize.max,
         children: <Widget>[
           Padding(
-            padding: EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+            padding: EdgeInsets.symmetric(
+              horizontal: 32, 
+              vertical: 32
+            ),
             child: searchBox
           ),
         ],
@@ -107,8 +110,7 @@ class TextPage extends StatelessWidget {
 
 // Counter page
 class CounterPage extends StatefulWidget {
-  final String title;
-  const CounterPage({super.key, required this.title});
+  const CounterPage({super.key});
 
   @override
   State<CounterPage> createState() => _CounterPageState();
