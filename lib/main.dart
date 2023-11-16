@@ -12,7 +12,11 @@ class FirstFlightApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'First Flight',
-      theme: ThemeData(useMaterial3: true),
+      theme: ThemeData(
+        useMaterial3: true,
+        primaryColor: Colors.amber[500],
+        hoverColor: Colors.amber[100]
+      ),
       home: const MainPage(),
     );
   }
@@ -74,7 +78,7 @@ class _MainPageState extends State<MainPage> {
   }
 }
 
-// Second page
+// Counter page
 class CounterPage extends StatefulWidget {
   final String title;
   const CounterPage({super.key, required this.title});
@@ -84,7 +88,6 @@ class CounterPage extends StatefulWidget {
 }
 
 
-// Store counter when on other pages
 class _CounterPageState extends State<CounterPage> {
   int defaultValue = 0;
   int _counter = 0;
@@ -142,25 +145,29 @@ class _CounterPageState extends State<CounterPage> {
       FloatingActionButton(
         onPressed: _decrementCounter,
         tooltip: 'Decrement',
+        backgroundColor: Colors.red,
         child: const Icon(Icons.exposure_minus_1),
       ),
 
       FloatingActionButton(
         onPressed: _incrementCounter,
         tooltip: 'Increment',
+        backgroundColor: Colors.green,
         child: const Icon(Icons.exposure_plus_1),
       ), 
     ];
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        backgroundColor: Theme.of(context).colorScheme.primary,
         title: Text(widget.title),
       ),
 
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.max,
+
           children: <Widget>[
             const Text('The current value is'),
             Text(
@@ -171,12 +178,15 @@ class _CounterPageState extends State<CounterPage> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: buttons
             ),
-            Row( 
-              mainAxisAlignment: MainAxisAlignment.center,
+            Column( 
+              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisSize: MainAxisSize.max,
+              mainAxisAlignment: MainAxisAlignment.end,
               children: <Widget> [
                 FloatingActionButton(
                   onPressed: _resetCounter,
                   tooltip: 'Reset',
+                  backgroundColor: Theme.of(context).primaryColor,
                   child: const Icon(Icons.refresh),
                 ),
               ],
