@@ -14,7 +14,7 @@ class FirstFlightApp extends StatelessWidget {
       title: 'First Flight',
       theme: ThemeData(
         useMaterial3: true,
-        primaryColor: Colors.amber[500],
+        primaryColor: Colors.blue[500],
         hoverColor: Colors.blue[100]
       ),
       home: const MainPage(),
@@ -62,10 +62,7 @@ class _MainPageState extends State<MainPage> {
           alignment: Alignment.center,
           child: const Text('Home Page'),
         ),
-        Container(
-          alignment: Alignment.center,
-          child: const Text('Text Page'),
-        ),
+        const TextPage(),
       ];
     
     var layout = Scaffold(
@@ -83,35 +80,27 @@ class _MainPageState extends State<MainPage> {
 }
 
 // Text Field Page
-class TextPage extends StatefulWidget {
-  final String title;
-  const TextPage({super.key, required this.title});
-
-  @override
-  State<TextPage> createState() => _TextPageState();
-}
-
-class _TextPageState extends State<TextPage> {
-  
+class TextPage extends StatelessWidget {
+  const TextPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.primary,
-        title: Text(widget.title),
+    const searchBox = TextField(
+      decoration: InputDecoration(
+        border: OutlineInputBorder(),
+        hintText: 'Enter a search term',
       ),
+    );
 
-      body: const Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          mainAxisSize: MainAxisSize.max,
-          children: <Widget>[
-            Text('Another Page'),
-          ],
-        ),
-      ),
+    return const Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.max,
+        children: <Widget>[
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+            child: searchBox
+          ),
+        ],
     );
   }
 }
@@ -186,7 +175,7 @@ class _CounterPageState extends State<CounterPage> {
         backgroundColor: Colors.red,
         child: const Icon(Icons.exposure_minus_1),
       ),
-      SizedBox(width: 20),
+      const SizedBox(width: 20),
       FloatingActionButton(
         onPressed: _incrementCounter,
         tooltip: 'Increment',
@@ -195,11 +184,24 @@ class _CounterPageState extends State<CounterPage> {
       ), 
     ];
 
-    var pageBody = Center(
+    var resetButton = Row( 
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: <Widget> [
+        FloatingActionButton(
+          onPressed: _resetCounter,
+          tooltip: 'Reset',
+          backgroundColor: Theme.of(context).primaryColor,
+          child: const Icon(Icons.refresh),
+        ),
+      ],
+    );
+
+    var pageBody = Scaffold(
+      body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           mainAxisSize: MainAxisSize.max,
-
           children: <Widget>[
             const Text('The current value is'),
             Text(
@@ -210,25 +212,13 @@ class _CounterPageState extends State<CounterPage> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: buttons
             ),
-            SizedBox(height: 20),
-            Row( 
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: <Widget> [
-                FloatingActionButton(
-                  onPressed: _resetCounter,
-                  tooltip: 'Reset',
-                  backgroundColor: Theme.of(context).primaryColor,
-                  child: const Icon(Icons.refresh),
-                ),
-              ],
-            ),
+            const SizedBox(height: 20),
+            resetButton,
           ],
         ),
-      );
-
-    return Scaffold(
-      body: pageBody
+      ),
     );
+
+    return pageBody;
   }
 }
