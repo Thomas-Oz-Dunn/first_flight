@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 
 var indicatorColor = Colors.blue[800];
 
-void main() => runApp(const FirstFlightApp());
+void main() { 
+  WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
+  FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
+  runApp(const FirstFlightApp());
+}
 
 class FirstFlightApp extends StatelessWidget {
   const FirstFlightApp({super.key});
@@ -34,6 +39,14 @@ class _MainPageState extends State<MainPage> {
 
   void updatePageIndex(int index) {
       setState(() {currentPageIndex = index;});
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    Future.delayed(const Duration(seconds: 10), () {
+      FlutterNativeSplash.remove();
+    });
   }
 
   @override
