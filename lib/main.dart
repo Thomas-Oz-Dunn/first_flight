@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+var indicatorColor = Colors.blue[800];
 
 void main() => runApp(const FirstFlightApp());
 
@@ -9,9 +12,7 @@ class FirstFlightApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'First Flight',
-      theme: ThemeData(
-        useMaterial3: true,
-      ),
+      theme: ThemeData(useMaterial3: true),
       home: const MainPage(),
     );
   }
@@ -29,7 +30,7 @@ class _MainPageState extends State<MainPage> {
 
   @override
   Widget build(BuildContext context) {
-    const dests = <Widget>[
+    const navigationDests = <Widget>[
         NavigationDestination(
           selectedIcon: Icon(Icons.home),
           icon: Icon(Icons.home_outlined),
@@ -64,9 +65,9 @@ class _MainPageState extends State<MainPage> {
         onDestinationSelected: (int index) {
           setState(() {currentPageIndex = index;});
         },
-        indicatorColor: Colors.blue[800],
+        indicatorColor: indicatorColor,
         selectedIndex: currentPageIndex,
-        destinations: dests,
+        destinations: navigationDests,
       ),
       body: pages[currentPageIndex],
     );
@@ -85,18 +86,72 @@ class CounterPage extends StatefulWidget {
 
 // Store counter when on other pages
 class _CounterPageState extends State<CounterPage> {
+  int defaultValue = 0;
   int _counter = 0;
+  SharedPreferences? preferences;
+
+  Future<void> initStorage() async {
+    preferences = await SharedPreferences.getInstance();
+
+    // init 1st time to defaultValue
+    int? savedData = preferences?.getInt("counter");
+    
+    if (savedData == null) {
+      await preferences!.setInt("counter", defaultValue);
+      _counter = defaultValue;
+    } else {
+      _counter = savedData;
+    }
+
+    setState(() {});
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    initStorage();
+  }
+
+  void _resetCounter() {
+    setState(() {
+      _counter = defaultValue;
+      preferences?.setInt("counter", _counter);
+    });
+  }
 
   void _incrementCounter() {
-    setState(() {_counter++;});
+    setState(() {
+      _counter = preferences?.getInt("counter") ?? defaultValue;
+      _counter++;
+      preferences?.setInt("counter", _counter);
+    });
   }
 
   void _decrementCounter() {
-    setState(() {_counter--;});
+    setState(() {
+      _counter = preferences?.getInt("counter") ?? defaultValue;
+      _counter--;
+      preferences?.setInt("counter", _counter);
+    });
   }
 
   @override
   Widget build(BuildContext context) {
+
+    var buttons = <Widget>[
+      FloatingActionButton(
+        onPressed: _decrementCounter,
+        tooltip: 'Decrement',
+        child: const Icon(Icons.exposure_minus_1),
+      ),
+
+      FloatingActionButton(
+        onPressed: _incrementCounter,
+        tooltip: 'Increment',
+        child: const Icon(Icons.exposure_plus_1),
+      ), 
+    ];
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
@@ -108,21 +163,23 @@ class _CounterPageState extends State<CounterPage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             const Text('The current value is'),
-            Text('$_counter', style: Theme.of(context).textTheme.headlineMedium,),
+            Text(
+              '$_counter', 
+              style: Theme.of(context).textTheme.headlineMedium,
+            ),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
+              children: buttons
+            ),
+            Row( 
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget> [
                 FloatingActionButton(
-                  onPressed: _decrementCounter,
-                  tooltip: 'Decrement',
-                  child: const Icon(Icons.exposure_minus_1),
+                  onPressed: _resetCounter,
+                  tooltip: 'Reset',
+                  child: const Icon(Icons.refresh),
                 ),
-                FloatingActionButton(
-                  onPressed: _incrementCounter,
-                  tooltip: 'Increment',
-                  child: const Icon(Icons.exposure_plus_1),
-                ), 
-              ]
+              ],
             ),
           ],
         ),
