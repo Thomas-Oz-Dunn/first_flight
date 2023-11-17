@@ -1,9 +1,37 @@
+// External imports
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:image_picker/image_picker.dart';
 
+// Internal imports
+// import 'package:first_flight/vizPage.dart'
+
 var indicatorColor = Colors.blue[800];
+
+
+// Goals of the app
+// Home Page
+// ---------
+// Favorites & ISS
+// New Satellites
+// View/Clear History
+// Query Page
+// Viz Page
+//
+// Query Page
+// ----------
+// 1. Search satellite names
+// 2. Connect to Device's GPS or enter manually
+// 3. Select API (Default N2YO) 
+//    - CELESTRAK 
+//    - N2YO
+//    - etc
+// 4. Query site for data, handle error
+// 5. Return next Az, El, time, brightness, trajectory
+// 6. Open viz page
+
+
 
 void main() { 
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
@@ -69,9 +97,9 @@ class _MainPageState extends State<MainPage> {
           label: 'Text',
         ),
         NavigationDestination(
-          selectedIcon: Icon(Icons.photo), 
-          icon: Icon(Icons.photo_outlined), 
-          label: 'Picture'
+          selectedIcon: Icon(Icons.camera), 
+          icon: Icon(Icons.camera_outlined), 
+          label: 'Camera'
         ),
       ];
       
