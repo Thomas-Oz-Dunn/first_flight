@@ -1,5 +1,9 @@
 import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:image_picker/image_picker.dart';
+
+import 'package:first_flight/types.dart';
 
 class VizPage extends StatefulWidget{
   
@@ -21,40 +25,62 @@ class VizPage extends StatefulWidget{
 // 4. Display trajectory on night sky
 // 5. Share or save trajectory
 class _VizPageState extends State<VizPage> {
+  final ImagePicker _picker = ImagePicker();
+
+  dynamic _getTrajError;
+  Trajectory currentTrajectory;
+
   // Default most recent or ISS?
   SharedPreferences? preferences;
-  var currentTrajectory;
-  var defaultTrajectory;
 
-  Future<void> initStorage() async {
+  Future<void> queryStorage(queryKey) async {
     preferences = await SharedPreferences.getInstance();
 
-    // init 1st time to defaultValue
-    Set<String>? availableKeys = preferences?.getKeys();
-
-    // Key = Name-StartDatetime
-    // Name string
-    // Az_0 float
-    // El_0 float
-    // StartDatetime List of ints yy, mm, dd, hh, mm, ss
-    // Duration List of ints mm ss
-    // Az_f float
-    // El_f float
-    // Brightness float
-
-    int? savedData = preferences?.getInt("trajectory");
-    
-    if (savedData == null) {
-      await preferences!.setInt("trajectory", defaultTrajectory);
-      currentTrajectory = defaultTrajectory;
-
-    } else {
-      currentTrajectory = savedData;
-
-    }
-
-    setState(() {});
+    if (preferences?.getKeys().contains(queryKey) == true) {
+      try {
+        Object? savedData = preferences?.get(queryKey);
+        if (savedData != null){
+          setState(() {
+            currentTrajectory = savedData as Trajectory;
+          });
+        }
+      } catch(e) {
+        setState(() {
+          _getTrajError = e;
+        });
+      }
+  }
   }
 
+  Future<void> getCurrentCamera() async
+  { 
+    setState(() {
+      _mediaFileList = _picker.pickImage(source: ImageSource.camera,);
+    });
+  }
 
+  @override
+  Widget build(BuildContext context) {
+    var pageBody = Scaffold(
+      floatingActionButton: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: <Widget>[
+          if (_picker.supportsImageSource(ImageSource.camera))
+            Padding(
+              padding: const EdgeInsets.only(top: 16.0),
+              child: FloatingActionButton(
+                onPressed: () {
+                  getCurrentCamera();
+                },
+                heroTag: 'image2',
+                tooltip: 'Get camera',
+                child: const Icon(Icons.camera_alt),
+              ),
+            ),
+        ],
+      ),
+    );
+
+    return pageBody;
 }
+  }
