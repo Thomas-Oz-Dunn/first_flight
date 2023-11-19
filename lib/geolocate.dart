@@ -11,6 +11,19 @@ final MaterialColor themeMaterialColor =
         const Color.fromRGBO(48, 49, 60, 1)
       );
 
+enum _PositionItemType {
+  log,
+  position,
+}
+
+class _PositionItem {
+  _PositionItem(this.type, this.displayValue);
+
+  final _PositionItemType type;
+  final String displayValue;
+}
+
+
 void main() {
   runApp(const GeolocatorWidget());
 }
@@ -104,10 +117,68 @@ class _GeolocatorWidgetState extends State<GeolocatorWidget> {
 
   @override
   Widget build(BuildContext context) {
-    const sizedBox = SizedBox(
-      height: 10,
-    );
+    const sizedBox = SizedBox(height: 10);
 
+      var listViewData = ListView.builder(
+        itemCount: _positionItems.length,
+        itemBuilder: (context, index) {
+          final positionItem = _positionItems[index];
+
+          if (positionItem.type == _PositionItemType.log) {
+
+            var listTile = ListTile(
+              title: Text(
+                positionItem.displayValue,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  )),
+            ); 
+            return listTile;
+
+          } else {
+      
+            var locateCard = Card(
+                child: ListTile(
+                  tileColor: themeMaterialColor,
+                  title: Text(
+                    positionItem.displayValue,
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                ),
+              );
+
+              return locateCard;
+            }
+          },
+        );
+        var buttonList = [
+      FloatingActionButton(
+        onPressed: () {
+          positionStreamStarted = !positionStreamStarted;
+          _toggleListening();
+        },
+        tooltip: (_positionStreamSubscription == null) ? 'Start position updates'
+            : _positionStreamSubscription!.isPaused ? 'Resume' : 'Pause',
+        backgroundColor: _determineButtonColor(),
+        child: (_positionStreamSubscription == null ||
+                _positionStreamSubscription!.isPaused)
+            ? const Icon(Icons.play_arrow)
+            : const Icon(Icons.pause),
+      ),
+      sizedBox,
+      FloatingActionButton(
+        onPressed: _getCurrentPosition,
+        child: const Icon(Icons.my_location),
+      ),
+      sizedBox,
+      FloatingActionButton(
+        onPressed: _getLastKnownPosition,
+        child: const Icon(Icons.bookmark),
+      ),
+    ];
+    
     return BaseflowPluginExample(
         pluginName: 'Geolocator',
         githubURL: 'https://github.com/Baseflow/flutter-geolocator',
@@ -120,64 +191,11 @@ class _GeolocatorWidgetState extends State<GeolocatorWidget> {
             Icons.location_on,
             (context) => Scaffold(
               backgroundColor: Theme.of(context).colorScheme.background,
-              body: ListView.builder(
-                itemCount: _positionItems.length,
-                itemBuilder: (context, index) {
-                  final positionItem = _positionItems[index];
-
-                  if (positionItem.type == _PositionItemType.log) {
-                    return ListTile(
-                      title: Text(positionItem.displayValue,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          )),
-                    );
-                  } else {
-                    return Card(
-                      child: ListTile(
-                        tileColor: themeMaterialColor,
-                        title: Text(
-                          positionItem.displayValue,
-                          style: const TextStyle(color: Colors.white),
-                        ),
-                      ),
-                    );
-                  }
-                },
-              ),
+              body: listViewData,
               floatingActionButton: Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  FloatingActionButton(
-                    child: (_positionStreamSubscription == null ||
-                            _positionStreamSubscription!.isPaused)
-                        ? const Icon(Icons.play_arrow)
-                        : const Icon(Icons.pause),
-                    onPressed: () {
-                      positionStreamStarted = !positionStreamStarted;
-                      _toggleListening();
-                    },
-                    tooltip: (_positionStreamSubscription == null)
-                        ? 'Start position updates'
-                        : _positionStreamSubscription!.isPaused
-                            ? 'Resume'
-                            : 'Pause',
-                    backgroundColor: _determineButtonColor(),
-                  ),
-                  sizedBox,
-                  FloatingActionButton(
-                    child: const Icon(Icons.my_location),
-                    onPressed: _getCurrentPosition,
-                  ),
-                  sizedBox,
-                  FloatingActionButton(
-                    child: const Icon(Icons.bookmark),
-                    onPressed: _getLastKnownPosition,
-                  ),
-                ],
+                children: buttonList,
               ),
             ),
           )
@@ -415,16 +433,4 @@ class _GeolocatorWidgetState extends State<GeolocatorWidget> {
       displayValue,
     );
   }
-}
-
-enum _PositionItemType {
-  log,
-  position,
-}
-
-class _PositionItem {
-  _PositionItem(this.type, this.displayValue);
-
-  final _PositionItemType type;
-  final String displayValue;
 }
