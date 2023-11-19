@@ -8,6 +8,7 @@ import 'package:image_picker/image_picker.dart';
 // import 'package:first_flight/vizPage.dart'
 
 var indicatorColor = Colors.blue[800];
+// Define color set
 
 
 // Goals of the app
@@ -18,6 +19,7 @@ var indicatorColor = Colors.blue[800];
 // View/Clear History
 // Query Page
 // Viz Page
+// Request Page
 //
 // Query Page
 // ----------
@@ -97,9 +99,9 @@ class _MainPageState extends State<MainPage> {
           label: 'Text',
         ),
         NavigationDestination(
-          selectedIcon: Icon(Icons.camera), 
-          icon: Icon(Icons.camera_outlined), 
-          label: 'Camera'
+          selectedIcon: Icon(Icons.textsms), 
+          icon: Icon(Icons.textsms_outlined), 
+          label: 'Feature Request'
         ),
       ];
       
@@ -110,7 +112,7 @@ class _MainPageState extends State<MainPage> {
           child: const Text('Home Page'),
         ),
         const TextPage(),
-        const ImagePickerPage(),
+        const RequestFeaturePage(),
       ];
     
     var mainPageLayout = Scaffold(
@@ -496,3 +498,102 @@ typedef OnPickImageCallback = void Function(
     double? maxHeight, 
     int? quality
 );
+
+
+class RequestFeaturePage extends StatefulWidget{
+
+  const RequestFeaturePage({super.key});
+
+  @override
+  State<RequestFeaturePage> createState() => _RequestFeatureState();
+
+}
+
+
+class _RequestFeatureState extends State<RequestFeaturePage> {
+  String currentRequest = '';
+  SharedPreferences? preferences;
+  final TextEditingController controller = TextEditingController();
+  
+  Future<void> initStorage() async {
+    preferences = await SharedPreferences.getInstance();
+    setState(() {});
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    initStorage();
+  }
+  
+  void _saveRequest() {
+    currentRequest = controller.text;
+    preferences?.setString("request", currentRequest);
+    setState(() {});
+  }
+
+  void _loadRequest(){
+    String? savedData = preferences?.getString("request");
+    
+    if (savedData == null) {
+      preferences?.setString("request", currentRequest);
+    } else {
+      currentRequest = savedData;
+    }
+    controller.text = currentRequest;
+    setState(() {});
+  }
+
+  void _clearRequest(){
+    currentRequest = '';
+    controller.text = currentRequest;
+    setState(() {});
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    var widgets = <Widget>[
+      TextField(
+        controller: controller,
+        decoration: const InputDecoration(
+          border: OutlineInputBorder(),
+          hintText: 'Enter a request',
+          ),
+        ),
+      Row(
+        children: [
+          FloatingActionButton(
+            onPressed: _loadRequest,
+            tooltip: 'Load Request',
+            backgroundColor: Colors.blue,
+            child: const Icon(Icons.file_copy),
+          ),
+          FloatingActionButton(
+            onPressed: _saveRequest,
+            tooltip: 'Save Request',
+            backgroundColor: Colors.blue,
+            child: const Icon(Icons.save),
+          ),
+          FloatingActionButton(
+            onPressed: _clearRequest,
+            tooltip: 'Clear Request',
+            backgroundColor: Colors.blue,
+            child: const Icon(Icons.clear),
+          ),
+       ],
+      )
+    ];
+
+    var pageLayout = Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.max,
+        children: widgets
+    );
+
+    return pageLayout;
+    
+  }
+  // Clear button
+  // Submit button
+  // - Post to Issue page on GitHub or email
+}
