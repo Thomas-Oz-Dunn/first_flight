@@ -13,6 +13,8 @@ const indicatorColor =  Color.fromARGB(255, 15, 83, 157);
 const buttonColor = Color.fromARGB(255, 15, 134, 122);
 
 // Goals of the app
+// Produce notifications of any Favorites, ISS, or Starlink
+//
 // Home Page
 // ---------
 // [] Favorites & ISS
@@ -417,6 +419,6 @@ class _FavoritesState extends State<FavoritesPage> {
     // addFavoriteButton
     // removeSwipe
 
-    return Column();
+    return const Column();
   }
 }
