@@ -5,6 +5,8 @@ import 'package:flutter_native_splash/flutter_native_splash.dart';
 
 // Internal imports
 // import 'package:first_flight/vizPage.dart'
+// import 'package:first_flight/requestPage.dart'
+
 
 const double objSpacing = 10;
 const indicatorColor =  Color.fromARGB(255, 15, 83, 157);
@@ -13,12 +15,13 @@ const buttonColor = Color.fromARGB(255, 15, 134, 122);
 // Goals of the app
 // Home Page
 // ---------
-// Favorites & ISS
-// New Satellites
-// View/Clear History
-// Query Page
-// Viz Page
-// Request Page
+// [] Favorites & ISS
+// [] New/Upcoming Launches
+// [] View/Clear History
+// [] Query Page
+// [] Viz/AR Page
+
+// [9/10] Request Page
 //
 // Query Page
 // ----------
@@ -50,7 +53,8 @@ class FirstFlightApp extends StatelessWidget {
       theme: ThemeData(
         useMaterial3: true,
         primaryColor: indicatorColor,
-        hoverColor: buttonColor
+        hoverColor: buttonColor,
+        primaryColorDark: const Color.fromARGB(255, 0, 0, 5)
       ),
       home: const MainPage(),
     );
@@ -129,7 +133,6 @@ class CounterPage extends StatefulWidget {
   @override
   State<CounterPage> createState() => _CounterPageState();
 }
-
 
 class _CounterPageState extends State<CounterPage> {
   int defaultValue = 0;
@@ -239,6 +242,7 @@ class _CounterPageState extends State<CounterPage> {
   }
 }
 
+// Feature Request page
 class RequestFeaturePage extends StatefulWidget{
 
   const RequestFeaturePage({super.key});
@@ -247,7 +251,6 @@ class RequestFeaturePage extends StatefulWidget{
   State<RequestFeaturePage> createState() => _RequestFeatureState();
 
 }
-
 
 class _RequestFeatureState extends State<RequestFeaturePage> {
   String currentRequest = '';
@@ -351,4 +354,69 @@ class _RequestFeatureState extends State<RequestFeaturePage> {
 
   // Submit button
   // - Post to Issue page on GitHub or email
+}
+
+
+
+// Feature Request page
+class FavoritesPage extends StatefulWidget{
+
+  const FavoritesPage({super.key});
+
+  @override
+  State<FavoritesPage> createState() => _FavoritesState();
+
+}
+
+class _FavoritesState extends State<FavoritesPage> {
+  SharedPreferences? preferences;
+  List<String> favorites = [''];
+
+  Future<void> initStorage() async {
+    preferences = await SharedPreferences.getInstance();
+    setState(() {});
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    initStorage();
+  }
+
+  void _addFavorite(name){
+    favorites.add(name);
+    preferences?.setStringList("Favorites", favorites);
+    setState(() {});
+  }
+
+  void _loadFavorites(){
+    List<String>? savedData = preferences?.getStringList('Favorites');
+    
+    if (savedData == null) {
+      preferences?.setStringList("Favorites", favorites);
+    } else {
+      favorites = savedData;
+    }
+
+    setState(() {});
+  }
+
+  void _removeFavorite(name){
+    favorites.remove(name);
+    preferences?.setStringList("Favorites", favorites);
+    setState(() {});
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    var favListView = ListView(
+
+    );
+
+    // addFavoriteButton
+    // addFavoriteButton
+    // removeSwipe
+
+    return Column();
+  }
 }
