@@ -1,4 +1,5 @@
 // External imports
+import 'package:first_flight/geolocate.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
@@ -99,6 +100,11 @@ class _MainPageState extends State<MainPage> {
           label: 'Home',
         ),
         NavigationDestination(
+          selectedIcon: Icon(Icons.satellite),
+          icon: Icon(Icons.satellite_outlined),
+          label: 'Locate',
+        ),
+        NavigationDestination(
           selectedIcon: Icon(Icons.textsms), 
           icon: Icon(Icons.textsms_outlined), 
           label: 'Feature Request'
@@ -111,6 +117,7 @@ class _MainPageState extends State<MainPage> {
           alignment: Alignment.center,
           child: const Text('Home Page'),
         ),
+        const LocaterPage(),
         const RequestFeaturePage(),
       ];
     
@@ -361,64 +368,99 @@ class _RequestFeatureState extends State<RequestFeaturePage> {
 
 
 // Feature Request page
-class FavoritesPage extends StatefulWidget{
+// class FavoritesPage extends StatefulWidget{
 
-  const FavoritesPage({super.key});
+//   const FavoritesPage({super.key});
 
-  @override
-  State<FavoritesPage> createState() => _FavoritesState();
+//   @override
+//   State<FavoritesPage> createState() => _FavoritesState();
 
-}
+// }
 
-class _FavoritesState extends State<FavoritesPage> {
-  SharedPreferences? preferences;
-  List<String> favorites = [''];
+// class _FavoritesState extends State<FavoritesPage> {
+//   SharedPreferences? preferences;
+//   List<String> favorites = [''];
 
-  Future<void> initStorage() async {
-    preferences = await SharedPreferences.getInstance();
-    setState(() {});
-  }
+//   Future<void> initStorage() async {
+//     preferences = await SharedPreferences.getInstance();
+//     setState(() {});
+//   }
 
-  @override
-  void initState() {
-    super.initState();
-    initStorage();
-  }
+//   @override
+//   void initState() {
+//     super.initState();
+//     initStorage();
+//   }
 
-  void _addFavorite(name){
-    favorites.add(name);
-    preferences?.setStringList("Favorites", favorites);
-    setState(() {});
-  }
+//   void _addFavorite(name){
+//     favorites.add(name);
+//     preferences?.setStringList("Favorites", favorites);
+//     setState(() {});
+//   }
 
-  void _loadFavorites(){
-    List<String>? savedData = preferences?.getStringList('Favorites');
+//   void _loadFavorites(){
+//     List<String>? savedData = preferences?.getStringList('Favorites');
     
-    if (savedData == null) {
-      preferences?.setStringList("Favorites", favorites);
-    } else {
-      favorites = savedData;
-    }
+//     if (savedData == null) {
+//       preferences?.setStringList("Favorites", favorites);
+//     } else {
+//       favorites = savedData;
+//     }
 
-    setState(() {});
-  }
+//     setState(() {});
+//   }
 
-  void _removeFavorite(name){
-    favorites.remove(name);
-    preferences?.setStringList("Favorites", favorites);
-    setState(() {});
-  }
+//   void _removeFavorite(name){
+//     favorites.remove(name);
+//     preferences?.setStringList("Favorites", favorites);
+//     setState(() {});
+//   }
 
-  @override
-  Widget build(BuildContext context) {
-    var favListView = ListView(
+//   @override
+//   Widget build(BuildContext context) {
+//     _loadFavorites();
 
-    );
+//     var favListView = ListView.builder(
 
-    // addFavoriteButton
-    // addFavoriteButton
-    // removeSwipe
 
-    return const Column();
-  }
-}
+//     )
+
+//     var buttons = Row(
+//         mainAxisAlignment: MainAxisAlignment.center,
+//         children: [
+//           FloatingActionButton(
+//             onPressed: _loadFavorites,
+//             tooltip: 'Load',
+//             backgroundColor: buttonColor,
+//             child: const Icon(
+//               Icons.file_copy,
+//               color: Color.fromARGB(185, 255, 255, 255),
+//               ),
+//           ),
+//           const SizedBox(width: objSpacing),
+//           FloatingActionButton(
+//             onPressed: _saveRequest,
+//             tooltip: 'Save',
+//             backgroundColor: buttonColor,
+//             child: const Icon(Icons.save,
+//               color: Color.fromARGB(185, 255, 255, 255)),
+//           ),
+//           const SizedBox(width: objSpacing),
+//           FloatingActionButton(
+//             onPressed: _clearRequest,
+//             tooltip: 'Clear',
+//             backgroundColor: buttonColor,
+//             child: const Icon(Icons.clear, 
+//               color: Color.fromARGB(185, 255, 255, 255)),
+//           ),
+//        ],
+//       )
+
+
+//     // addFavoriteButton
+//     // removeFavoriteButton
+//     // removeSwipe
+
+//     return const Column();
+//   }
+// }
