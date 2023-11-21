@@ -1,16 +1,14 @@
 // External imports
-import 'package:first_flight/geolocate.dart';
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 
 // Internal imports
 // import 'package:first_flight/vizPage.dart'
-// import 'package:first_flight/requestPage.dart'
-
 
 const double objSpacing = 10;
-const indicatorColor =  Color.fromARGB(255, 15, 83, 157);
+const teal =  Color.fromARGB(255, 15, 83, 157);
 const buttonColor = Color.fromARGB(255, 15, 134, 122);
 
 // Goals of the app
@@ -55,7 +53,7 @@ class FirstFlightApp extends StatelessWidget {
       title: 'First Flight',
       theme: ThemeData(
         useMaterial3: true,
-        primaryColor: indicatorColor,
+        primaryColor: teal,
         hoverColor: buttonColor,
         primaryColorDark: const Color.fromARGB(255, 0, 0, 5)
       ),
@@ -109,6 +107,11 @@ class _MainPageState extends State<MainPage> {
           icon: Icon(Icons.textsms_outlined), 
           label: 'Feature Request'
         ),
+        NavigationDestination(
+          selectedIcon: Icon(Icons.star), 
+          icon: Icon(Icons.star_outline), 
+          label: 'Favorites'
+        ),
       ];
       
     var pages = <Widget>[
@@ -119,12 +122,13 @@ class _MainPageState extends State<MainPage> {
         ),
         const LocaterPage(),
         const RequestFeaturePage(),
+        const FavoritesPage(),
       ];
     
     var mainPageLayout = Scaffold(
       bottomNavigationBar: NavigationBar(
         onDestinationSelected: updatePageIndex,
-        indicatorColor: indicatorColor,
+        indicatorColor: teal,
         selectedIndex: currentPageIndex,
         destinations: navigationDests,
       ),
@@ -226,6 +230,9 @@ class _CounterPageState extends State<CounterPage> {
     );
 
     var pageBody = Scaffold(
+      appBar: AppBar(
+        title: const Text("Counter"),
+      ),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -351,116 +358,159 @@ class _RequestFeatureState extends State<RequestFeaturePage> {
       )
     ];
 
-    var pageLayout = Column(
+    var pageLayout = Scaffold(
+      appBar: AppBar(
+        title: const Text("Feature Request"),
+      ),
+      body: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         mainAxisSize: MainAxisSize.max,
         children: widgets
+    )
     );
-
-    return pageLayout;
     
-  }
-
-  // Submit button
-  // - Post to Issue page on GitHub or email
+    return pageLayout;
+    }
 }
 
 
+class LocaterPage extends StatefulWidget {
+  const LocaterPage({super.key});
+
+  @override
+  State<LocaterPage> createState() => _LocaterPageState();
+}
+
+class _LocaterPageState extends State<LocaterPage> {
+  bool hasPos = false;
+  late Position _currentPosition;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text("Location"),
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            FloatingActionButton.large(
+              backgroundColor: teal,
+              foregroundColor: Colors.white,
+              child: const Text("Get location"),
+              onPressed: () {
+                _getCurrentLocation();
+              },
+            ),
+            const SizedBox(height: 10),
+            if (hasPos == true) Text(
+              "Lattitude: ${_currentPosition.latitude}\n"
+              "Longitude: ${_currentPosition.longitude}"
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _getCurrentLocation() {
+    Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.best, 
+        forceAndroidLocationManager: true)
+      .then((Position position) {
+        setState(() {
+          _currentPosition = position;
+          hasPos = true;
+        });
+      }).catchError((e) {
+          hasPos = false;
+      });
+  }
+}
 
 // Feature Request page
-// class FavoritesPage extends StatefulWidget{
+class FavoritesPage extends StatefulWidget{
 
-//   const FavoritesPage({super.key});
+  const FavoritesPage({super.key});
 
-//   @override
-//   State<FavoritesPage> createState() => _FavoritesState();
+  @override
+  State<FavoritesPage> createState() => _FavoritesState();
 
-// }
+}
 
-// class _FavoritesState extends State<FavoritesPage> {
-//   SharedPreferences? preferences;
-//   List<String> favorites = [''];
+class _FavoritesState extends State<FavoritesPage> {
+  SharedPreferences? preferences;
+  List<String> favorites = [''];
 
-//   Future<void> initStorage() async {
-//     preferences = await SharedPreferences.getInstance();
-//     setState(() {});
-//   }
+  Future<void> initStorage() async {
+    preferences = await SharedPreferences.getInstance();
+    setState(() {});
+  }
 
-//   @override
-//   void initState() {
-//     super.initState();
-//     initStorage();
-//   }
+  @override
+  void initState() {
+    super.initState();
+    initStorage();
+  }
 
-//   void _addFavorite(name){
-//     favorites.add(name);
-//     preferences?.setStringList("Favorites", favorites);
-//     setState(() {});
-//   }
+  void _addFavorite(name){
+    favorites.add(name);
+    preferences?.setStringList("Favorites", favorites);
+    setState(() {});
+  }
 
-//   void _loadFavorites(){
-//     List<String>? savedData = preferences?.getStringList('Favorites');
+  void _loadFavorites(){
+    List<String>? savedData = preferences?.getStringList('Favorites');
     
-//     if (savedData == null) {
-//       preferences?.setStringList("Favorites", favorites);
-//     } else {
-//       favorites = savedData;
-//     }
+    if (savedData == null) {
+      preferences?.setStringList("Favorites", favorites);
+    } else {
+      favorites = savedData;
+    }
 
-//     setState(() {});
-//   }
+    setState(() {});
+  }
 
-//   void _removeFavorite(name){
-//     favorites.remove(name);
-//     preferences?.setStringList("Favorites", favorites);
-//     setState(() {});
-//   }
+  void _removeFavorite(name){
+    favorites.remove(name);
+    preferences?.setStringList("Favorites", favorites);
+    setState(() {});
+  }
 
-//   @override
-//   Widget build(BuildContext context) {
-//     _loadFavorites();
-
-//     var favListView = ListView.builder(
-
-
-//     )
-
-//     var buttons = Row(
-//         mainAxisAlignment: MainAxisAlignment.center,
-//         children: [
-//           FloatingActionButton(
-//             onPressed: _loadFavorites,
-//             tooltip: 'Load',
-//             backgroundColor: buttonColor,
-//             child: const Icon(
-//               Icons.file_copy,
-//               color: Color.fromARGB(185, 255, 255, 255),
-//               ),
-//           ),
-//           const SizedBox(width: objSpacing),
-//           FloatingActionButton(
-//             onPressed: _saveRequest,
-//             tooltip: 'Save',
-//             backgroundColor: buttonColor,
-//             child: const Icon(Icons.save,
-//               color: Color.fromARGB(185, 255, 255, 255)),
-//           ),
-//           const SizedBox(width: objSpacing),
-//           FloatingActionButton(
-//             onPressed: _clearRequest,
-//             tooltip: 'Clear',
-//             backgroundColor: buttonColor,
-//             child: const Icon(Icons.clear, 
-//               color: Color.fromARGB(185, 255, 255, 255)),
-//           ),
-//        ],
-//       )
+  Widget _buildList() {
+      _loadFavorites();
+      return ListView.builder(
+        padding: const EdgeInsets.all(16.0),
+        itemBuilder: (context, itemIdxs) {
+          return ListTile(
+        title: Text(
+          favorites[itemIdxs], 
+          style: const TextStyle(
+            fontSize: 18.0
+        )));
+        },
+      );
+      }
 
 
-//     // addFavoriteButton
-//     // removeFavoriteButton
-//     // removeSwipe
+  @override
+  Widget build(BuildContext context) {
 
-//     return const Column();
-//   }
-// }
+    // addFavoriteButton
+    // removeFavoriteButton
+    // removeSwipe
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Favorites'),
+        actions: const <Widget>[
+          Icon(Icons.star)
+        ],
+      ),
+      body: _buildList()
+    );
+    
+
+  }
+}
