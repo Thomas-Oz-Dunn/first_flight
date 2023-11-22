@@ -441,7 +441,7 @@ class FavoritesPage extends StatefulWidget{
 
 class _FavoritesState extends State<FavoritesPage> {
   SharedPreferences? preferences;
-  List<String> favorites = [''];
+  List<String> favorites = ["First", 'Second'];
 
   Future<void> initStorage() async {
     preferences = await SharedPreferences.getInstance();
@@ -483,12 +483,22 @@ class _FavoritesState extends State<FavoritesPage> {
       return ListView.builder(
         padding: const EdgeInsets.all(16.0),
         itemBuilder: (context, itemIdxs) {
-          return ListTile(
-        title: Text(
-          favorites[itemIdxs], 
-          style: const TextStyle(
-            fontSize: 18.0
-        )));
+          if (itemIdxs < favorites.length){
+            return ListTile(
+              title: Text(
+                favorites[itemIdxs], 
+                style: const TextStyle(
+                  fontSize: 18.0
+              )));
+          }
+          else {
+            return const ListTile(
+              title: Text(
+                'More?', 
+                style: TextStyle(
+                  fontSize: 18.0
+              )));
+          }
         },
       );
       }
