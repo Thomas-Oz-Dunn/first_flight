@@ -491,17 +491,13 @@ class _FavoritesState extends State<FavoritesPage> {
                   fontSize: 18.0
               )));
           }
-          else {
-            return const ListTile(
-              title: Text(
-                'More?', 
-                style: TextStyle(
-                  fontSize: 18.0
-              )));
-          }
         },
       );
       }
+
+
+  // Display text box in fron of everything
+  // _addNewFavorite
 
 
   @override
@@ -515,7 +511,9 @@ class _FavoritesState extends State<FavoritesPage> {
       appBar: AppBar(
         title: const Text('Favorites'),
         actions: const <Widget>[
-          Icon(Icons.star)
+          Icon(
+            Icons.star,
+          )
         ],
       ),
       body: _buildList()
