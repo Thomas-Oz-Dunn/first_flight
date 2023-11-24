@@ -9,19 +9,19 @@ import 'package:flutter_native_splash/flutter_native_splash.dart';
 
 const double objSpacing = 10;
 const teal =  Color.fromARGB(255, 15, 83, 157);
-const buttonColor = Color.fromARGB(255, 15, 134, 122);
+const blue = Color.fromARGB(255, 15, 134, 122);
+const white = Color.fromARGB(185, 255, 255, 255);
 
 // Goals of the app
 // Produce notifications of any Favorites, ISS, or Starlink
 //
 // Home Page
 // ---------
-// [] Favorites & ISS
+// [9/10] Favorites & ISS
 // [] New/Upcoming Launches
 // [] View/Clear History
 // [] Query Page
 // [] Viz/AR Page
-
 // [9/10] Request Page
 //
 // Query Page
@@ -54,7 +54,7 @@ class FirstFlightApp extends StatelessWidget {
       theme: ThemeData(
         useMaterial3: true,
         primaryColor: teal,
-        hoverColor: buttonColor,
+        hoverColor: blue,
         primaryColorDark: const Color.fromARGB(255, 0, 0, 5)
       ),
       home: const MainPage(),
@@ -332,27 +332,31 @@ class _RequestFeatureState extends State<RequestFeaturePage> {
           FloatingActionButton(
             onPressed: _loadRequest,
             tooltip: 'Load',
-            backgroundColor: buttonColor,
+            backgroundColor: blue,
             child: const Icon(
               Icons.file_copy,
-              color: Color.fromARGB(185, 255, 255, 255),
+              color: white,
               ),
           ),
           const SizedBox(width: objSpacing),
           FloatingActionButton(
             onPressed: _saveRequest,
             tooltip: 'Save',
-            backgroundColor: buttonColor,
-            child: const Icon(Icons.save,
-              color: Color.fromARGB(185, 255, 255, 255)),
+            backgroundColor: blue,
+            child: const Icon(
+              Icons.save,
+              color: white
+              ),
           ),
           const SizedBox(width: objSpacing),
           FloatingActionButton(
             onPressed: _clearRequest,
             tooltip: 'Clear',
-            backgroundColor: buttonColor,
-            child: const Icon(Icons.clear, 
-              color: Color.fromARGB(185, 255, 255, 255)),
+            backgroundColor: blue,
+            child: const Icon(
+              Icons.clear, 
+              color: white,
+              )
           ),
        ],
       )
@@ -480,6 +484,7 @@ class _FavoritesState extends State<FavoritesPage> {
 
   Widget _buildList() {
       _loadFavorites();
+
       return ListView.builder(
         padding: const EdgeInsets.all(16.0),
         itemBuilder: (context, itemIdxs) {
@@ -489,7 +494,17 @@ class _FavoritesState extends State<FavoritesPage> {
                 favorites[itemIdxs], 
                 style: const TextStyle(
                   fontSize: 18.0
-              )));
+                )
+              ),
+              trailing: IconButton(
+                icon: const Icon(
+                  Icons.delete,
+                ),
+                onPressed: () async {
+                  _removeFavorite(favorites[itemIdxs]);
+                },
+              )
+            );
           }
         },
       );
@@ -498,55 +513,59 @@ class _FavoritesState extends State<FavoritesPage> {
   final _textFieldController = TextEditingController();
 
   Future<String?> _showTextInputDialog(BuildContext context) async {
+
+    var dialogBox = AlertDialog(
+      title: const Text('Add new favorite'),
+      content: TextField(
+        controller: _textFieldController,
+        decoration: const InputDecoration(hintText: "New Favorite"),
+      ),
+      actions: <Widget>[
+        ElevatedButton(
+          child: const Text("Exit"),
+          onPressed: () => Navigator.pop(context),
+        ),
+        ElevatedButton(
+          child: const Text('Add'),
+          onPressed: () => Navigator.pop(
+            context, 
+            _textFieldController.text
+            ),
+        ),
+      ],
+    );
+
     return showDialog(
         context: context,
         builder: (context) {
-          return AlertDialog(
-            title: const Text('Add new favorite'),
-            content: TextField(
-              controller: _textFieldController,
-              decoration: const InputDecoration(hintText: "New Favorite"),
-            ),
-            actions: <Widget>[
-              ElevatedButton(
-                child: const Text("Exit"),
-                onPressed: () => Navigator.pop(context),
-              ),
-              ElevatedButton(
-                child: const Text('Save'),
-                onPressed: () => Navigator.pop(context, _textFieldController.text),
-              ),
-            ],
-          );
+          return dialogBox;
         });
     }
 
   @override
   Widget build(BuildContext context) {
 
-    // removeFavoriteButton
     // removeSwipe
+    var addFavButtonAppBar = <Widget>[
+      IconButton(
+        icon: const Icon(
+          Icons.star,
+        ),
+        onPressed: () async {
+          var resultLabel = await _showTextInputDialog(context);
+          if (resultLabel != null) {
+            setState((){_addFavorite(resultLabel);});
+          }
+        }
+      )
+    ];
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Favorites'),
-        actions: <Widget>[
-          IconButton(
-            icon: const Icon(
-              Icons.star,
-            ),
-            onPressed: () async {
-              var resultLabel = await _showTextInputDialog(context);
-              if (resultLabel != null) {
-                setState((){_addFavorite(resultLabel);});
-              }
-            }
-          )
-        ],
+        actions:  addFavButtonAppBar
       ),
       body: _buildList()
     );
-    
-
   }
 }
