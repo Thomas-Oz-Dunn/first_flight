@@ -11,6 +11,8 @@ const double objSpacing = 10;
 const teal =  Color.fromARGB(255, 15, 83, 157);
 const blue = Color.fromARGB(255, 15, 134, 122);
 const white = Color.fromARGB(185, 255, 255, 255);
+const black =  Color.fromARGB(255, 0, 0, 5);
+const gray =  Color.fromARGB(255, 32, 32, 45);
 
 // Goals of the app
 // Produce notifications of any Favorites, ISS, or Starlink
@@ -55,7 +57,8 @@ class FirstFlightApp extends StatelessWidget {
         useMaterial3: true,
         primaryColor: teal,
         hoverColor: blue,
-        primaryColorDark: const Color.fromARGB(255, 0, 0, 5)
+        primaryColorDark: black,
+        canvasColor: gray
       ),
       home: const MainPage(),
     );
@@ -118,7 +121,12 @@ class _MainPageState extends State<MainPage> {
         const CounterPage(),
         Container(
           alignment: Alignment.center,
-          child: const Text('Home Page'),
+          child: const Text(
+            'Home Page',
+            style: TextStyle(
+              color: white
+            )
+          ),
         ),
         const LocaterPage(),
         const RequestFeaturePage(),
@@ -133,6 +141,7 @@ class _MainPageState extends State<MainPage> {
         destinations: navigationDests,
       ),
       body: pages[currentPageIndex],
+      backgroundColor: gray
     );
 
     return mainPageLayout;
@@ -231,17 +240,26 @@ class _CounterPageState extends State<CounterPage> {
 
     var pageBody = Scaffold(
       appBar: AppBar(
-        title: const Text("Counter"),
+        title: const Text(
+          "Counter"
+        ),
       ),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           mainAxisSize: MainAxisSize.max,
           children: <Widget>[
-            const Text('The current value is'),
+            const Text(
+              'The current value is',
+              style: TextStyle(
+                color: white
+              )
+              ),
             Text(
               '$_counter', 
-              style: Theme.of(context).textTheme.headlineMedium,
+              style: const TextStyle(
+                color: white
+              ),
             ),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -252,6 +270,7 @@ class _CounterPageState extends State<CounterPage> {
           ],
         ),
       ),
+      backgroundColor: gray
     );
 
     return pageBody;
@@ -336,7 +355,7 @@ class _RequestFeatureState extends State<RequestFeaturePage> {
             child: const Icon(
               Icons.file_copy,
               color: white,
-              ),
+            ),
           ),
           const SizedBox(width: objSpacing),
           FloatingActionButton(
@@ -358,19 +377,25 @@ class _RequestFeatureState extends State<RequestFeaturePage> {
               color: white,
               )
           ),
-       ],
+        ],
       )
     ];
 
     var pageLayout = Scaffold(
       appBar: AppBar(
-        title: const Text("Feature Request"),
+        title: const Text(
+          "Feature Request",
+          style: TextStyle(
+            color: white
+          )
+          ),
       ),
       body: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         mainAxisSize: MainAxisSize.max,
         children: widgets
-    )
+      ),
+      backgroundColor: gray
     );
     
     return pageLayout;
@@ -393,7 +418,12 @@ class _LocaterPageState extends State<LocaterPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Location"),
+        title: const Text(
+          "Location",
+          style: TextStyle(
+            color: white
+          )
+        ),
       ),
       body: Center(
         child: Column(
@@ -401,8 +431,13 @@ class _LocaterPageState extends State<LocaterPage> {
           children: <Widget>[
             FloatingActionButton.large(
               backgroundColor: teal,
-              foregroundColor: Colors.white,
-              child: const Text("Get location"),
+              foregroundColor: white,
+              child: const Text(
+                "Get location",
+                style: TextStyle(
+                  color: white
+                )
+              ),
               onPressed: () {
                 _getCurrentLocation();
               },
@@ -410,11 +445,15 @@ class _LocaterPageState extends State<LocaterPage> {
             const SizedBox(height: 10),
             if (hasPos == true) Text(
               "Lattitude: ${_currentPosition.latitude}\n"
-              "Longitude: ${_currentPosition.longitude}"
+              "Longitude: ${_currentPosition.longitude}",
+              style: const TextStyle(
+                color: white
+              )
             ),
           ],
         ),
       ),
+      backgroundColor: gray
     );
   }
 
@@ -445,7 +484,7 @@ class FavoritesPage extends StatefulWidget{
 
 class _FavoritesState extends State<FavoritesPage> {
   SharedPreferences? preferences;
-  List<String> favorites = ["First", 'Second'];
+  List<String> favorites = ["First"];
 
   Future<void> initStorage() async {
     preferences = await SharedPreferences.getInstance();
@@ -493,7 +532,8 @@ class _FavoritesState extends State<FavoritesPage> {
               title: Text(
                 favorites[itemIdxs], 
                 style: const TextStyle(
-                  fontSize: 18.0
+                  fontSize: 18.0,
+                  color: white
                 )
               ),
               trailing: IconButton(
@@ -515,18 +555,33 @@ class _FavoritesState extends State<FavoritesPage> {
   Future<String?> _showTextInputDialog(BuildContext context) async {
 
     var dialogBox = AlertDialog(
-      title: const Text('Add new favorite'),
+      title: const Text(
+        'Add new favorite',
+        style: TextStyle(
+          color: white
+        )
+      ),
       content: TextField(
         controller: _textFieldController,
         decoration: const InputDecoration(hintText: "New Favorite"),
       ),
       actions: <Widget>[
         ElevatedButton(
-          child: const Text("Exit"),
+          child: const Text(
+            "Exit",
+            style: TextStyle(
+              color: white
+            )
+          ),
           onPressed: () => Navigator.pop(context),
         ),
         ElevatedButton(
-          child: const Text('Add'),
+          child: const Text(
+            'Add',
+            style: TextStyle(
+              color: white
+            )
+          ),
           onPressed: () => Navigator.pop(
             context, 
             _textFieldController.text
@@ -562,10 +617,13 @@ class _FavoritesState extends State<FavoritesPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Favorites'),
+        title: const Text(
+          'Favorites'
+        ),
         actions:  addFavButtonAppBar
       ),
-      body: _buildList()
+      body: _buildList(),
+      backgroundColor: gray
     );
   }
 }
