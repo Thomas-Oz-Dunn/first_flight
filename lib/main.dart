@@ -495,24 +495,52 @@ class _FavoritesState extends State<FavoritesPage> {
       );
       }
 
+  final _textFieldController = TextEditingController();
 
-  // Display text box in fron of everything
-  // _addNewFavorite
-
+  Future<String?> _showTextInputDialog(BuildContext context) async {
+    return showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: const Text('Add new favorite'),
+            content: TextField(
+              controller: _textFieldController,
+              decoration: const InputDecoration(hintText: "New Favorite"),
+            ),
+            actions: <Widget>[
+              ElevatedButton(
+                child: const Text("Exit"),
+                onPressed: () => Navigator.pop(context),
+              ),
+              ElevatedButton(
+                child: const Text('Save'),
+                onPressed: () => Navigator.pop(context, _textFieldController.text),
+              ),
+            ],
+          );
+        });
+    }
 
   @override
   Widget build(BuildContext context) {
 
-    // addFavoriteButton
     // removeFavoriteButton
     // removeSwipe
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Favorites'),
-        actions: const <Widget>[
-          Icon(
-            Icons.star,
+        actions: <Widget>[
+          IconButton(
+            icon: const Icon(
+              Icons.star,
+            ),
+            onPressed: () async {
+              var resultLabel = await _showTextInputDialog(context);
+              if (resultLabel != null) {
+                setState((){_addFavorite(resultLabel);});
+              }
+            }
           )
         ],
       ),
