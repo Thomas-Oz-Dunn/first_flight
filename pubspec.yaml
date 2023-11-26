@@ -12,7 +12,7 @@ dependencies:
   flutter:
     sdk: flutter
   shared_preferences:  ^2.2.2
-  image_picker: ^1.0.4
+  camera: ^0.10.5
   url_launcher: ^6.2.1
   animations: ^2.0.8
   flutter_native_splash: ^2.3.5

@@ -1,5 +1,6 @@
 // External imports
 import 'package:flutter/material.dart';
+import 'package:camera/camera.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
@@ -61,6 +62,7 @@ class FirstFlightApp extends StatelessWidget {
         primaryColorDark: black,
         canvasColor: gray
       ),
+      debugShowCheckedModeBanner: false,
       home: const MainPage(),
     );
   }
@@ -97,6 +99,11 @@ class _MainPageState extends State<MainPage> {
           label: 'Counter',
         ),
         NavigationDestination(
+          selectedIcon: Icon(Icons.camera),
+          icon: Icon(Icons.camera_outlined),
+          label: 'Camera',
+        ),
+        NavigationDestination(
           selectedIcon: Icon(Icons.home),
           icon: Icon(Icons.home_outlined),
           label: 'Home',
@@ -120,6 +127,7 @@ class _MainPageState extends State<MainPage> {
       
     var pages = <Widget>[
         const CounterPage(),
+        const CameraPage(),
         Container(
           alignment: Alignment.center,
           child: const Text(
@@ -149,6 +157,68 @@ class _MainPageState extends State<MainPage> {
   }
 }
 
+// Camera Page
+class CameraPage extends StatefulWidget {
+  /// Default Constructor
+  const CameraPage({super.key});
+
+  @override
+  State<CameraPage> createState() => _CameraPageState();
+}
+
+
+class _CameraPageState extends State<CameraPage> {
+  late CameraController controller;
+  int rearCamera = 0;
+  int frontCamera = 1;
+
+  Future<void> _initCamera() async {
+    List<CameraDescription> cameras = await availableCameras();
+
+    controller = CameraController(
+      cameras[rearCamera], 
+      ResolutionPreset.max
+    );
+    
+    controller.initialize().then((_) {
+      if (!mounted) {
+        return;
+      }
+      setState(() {});
+    }).catchError((Object e) {
+      if (e is CameraException) {
+        switch (e.code) {
+          case 'CameraAccessDenied':
+            // Handle access errors here.
+            break;
+          default:
+            // Handle other errors here.
+            break;
+        }
+      }
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _initCamera();
+  }
+
+  @override
+  void dispose() {
+    controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+        body: SafeArea(
+          child: controller.value.isInitialized ? 
+            CameraPreview(controller) : const Center(child: CircularProgressIndicator())));
+  }
+}
 // Counter page
 class CounterPage extends StatefulWidget {
   const CounterPage({super.key});
@@ -422,6 +492,36 @@ class _LocaterPageState extends State<LocaterPage> {
 
   @override
   Widget build(BuildContext context) {
+    var getLocationButton = <Widget>[
+      FloatingActionButton(
+        backgroundColor: teal,
+        foregroundColor: white,
+        child: const Text(
+          "Get location",
+          style: TextStyle(
+            color: white
+          )
+        ),
+        onPressed: () {
+          _getCurrentLocation();
+        },
+      ),
+      if (hasPos == true) Text(
+        "Lattitude: ${_currentPosition.latitude}\n"
+        "Longitude: ${_currentPosition.longitude}",
+        style: const TextStyle(
+          color: white
+        )
+      ) else const Text(
+        'Unknown Location',
+        style: TextStyle(
+          color: white
+        )
+      ),
+    ];
+    
+
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: black,
@@ -434,30 +534,8 @@ class _LocaterPageState extends State<LocaterPage> {
       ),
       body: Center(
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            FloatingActionButton.large(
-              backgroundColor: teal,
-              foregroundColor: white,
-              child: const Text(
-                "Get location",
-                style: TextStyle(
-                  color: white
-                )
-              ),
-              onPressed: () {
-                _getCurrentLocation();
-              },
-            ),
-            const SizedBox(height: 10),
-            if (hasPos == true) Text(
-              "Lattitude: ${_currentPosition.latitude}\n"
-              "Longitude: ${_currentPosition.longitude}",
-              style: const TextStyle(
-                color: white
-              )
-            ),
-          ],
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: getLocationButton,
         ),
       ),
       backgroundColor: gray
