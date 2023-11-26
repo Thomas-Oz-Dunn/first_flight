@@ -76,7 +76,7 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPageState extends State<MainPage> {
-  int currentPageIndex = 1;
+  int currentPageIndex = 2;
 
   void updatePageIndex(int index) {
       setState(() {currentPageIndex = index;});
@@ -125,18 +125,24 @@ class _MainPageState extends State<MainPage> {
         ),
       ];
       
+
+    var mainPage = Container(
+      alignment: Alignment.center,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Home'),
+        ),
+        body: GridView.count(
+          crossAxisCount: 3,
+          children: navigationDests
+        )
+      )
+    );
+
     var pages = <Widget>[
         const CounterPage(),
         const CameraPage(),
-        Container(
-          alignment: Alignment.center,
-          child: const Text(
-            'Home Page',
-            style: TextStyle(
-              color: white
-            )
-          ),
-        ),
+        mainPage,
         const LocaterPage(),
         const RequestFeaturePage(),
         const FavoritesPage(),
@@ -176,7 +182,7 @@ class _CameraPageState extends State<CameraPage> {
     List<CameraDescription> cameras = await availableCameras();
 
     controller = CameraController(
-      cameras[rearCamera], 
+      cameras[frontCamera], 
       ResolutionPreset.max
     );
     
@@ -216,7 +222,9 @@ class _CameraPageState extends State<CameraPage> {
     return Scaffold(
         body: SafeArea(
           child: controller.value.isInitialized ? 
-            CameraPreview(controller) : const Center(child: CircularProgressIndicator())));
+            CameraPreview(controller) : const Center(child: CircularProgressIndicator())
+      )
+    );
   }
 }
 // Counter page
