@@ -16,6 +16,7 @@ const gray =  Color.fromARGB(255, 32, 32, 45);
 
 // Goals of the app
 // Produce notifications of any Favorites, ISS, or Starlink
+// Support dark mode and light mode
 //
 // Home Page
 // ---------
@@ -240,8 +241,12 @@ class _CounterPageState extends State<CounterPage> {
 
     var pageBody = Scaffold(
       appBar: AppBar(
+        backgroundColor: black,
         title: const Text(
-          "Counter"
+          "Counter",
+          style: TextStyle(
+            color: white
+          )
         ),
       ),
       body: Center(
@@ -365,7 +370,7 @@ class _RequestFeatureState extends State<RequestFeaturePage> {
             child: const Icon(
               Icons.save,
               color: white
-              ),
+            ),
           ),
           const SizedBox(width: objSpacing),
           FloatingActionButton(
@@ -375,7 +380,7 @@ class _RequestFeatureState extends State<RequestFeaturePage> {
             child: const Icon(
               Icons.clear, 
               color: white,
-              )
+            )
           ),
         ],
       )
@@ -383,6 +388,7 @@ class _RequestFeatureState extends State<RequestFeaturePage> {
 
     var pageLayout = Scaffold(
       appBar: AppBar(
+        backgroundColor: black,
         title: const Text(
           "Feature Request",
           style: TextStyle(
@@ -402,7 +408,7 @@ class _RequestFeatureState extends State<RequestFeaturePage> {
     }
 }
 
-
+// Locator page
 class LocaterPage extends StatefulWidget {
   const LocaterPage({super.key});
 
@@ -418,6 +424,7 @@ class _LocaterPageState extends State<LocaterPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: black,
         title: const Text(
           "Location",
           style: TextStyle(
@@ -472,7 +479,7 @@ class _LocaterPageState extends State<LocaterPage> {
   }
 }
 
-// Feature Request page
+// Favorites page
 class FavoritesPage extends StatefulWidget{
 
   const FavoritesPage({super.key});
@@ -533,7 +540,6 @@ class _FavoritesState extends State<FavoritesPage> {
                 favorites[itemIdxs], 
                 style: const TextStyle(
                   fontSize: 18.0,
-                  color: white
                 )
               ),
               trailing: IconButton(
@@ -569,18 +575,12 @@ class _FavoritesState extends State<FavoritesPage> {
         ElevatedButton(
           child: const Text(
             "Exit",
-            style: TextStyle(
-              color: white
-            )
           ),
           onPressed: () => Navigator.pop(context),
         ),
         ElevatedButton(
           child: const Text(
             'Add',
-            style: TextStyle(
-              color: white
-            )
           ),
           onPressed: () => Navigator.pop(
             context, 
@@ -617,8 +617,12 @@ class _FavoritesState extends State<FavoritesPage> {
 
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: black,
         title: const Text(
-          'Favorites'
+          'Favorites',
+          style: TextStyle(
+            color: white
+          )
         ),
         actions:  addFavButtonAppBar
       ),
