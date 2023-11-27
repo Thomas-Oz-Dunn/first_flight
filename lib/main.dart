@@ -114,17 +114,11 @@ class _MainPageState extends State<MainPage> {
           label: 'Locate',
         ),
         NavigationDestination(
-          selectedIcon: Icon(Icons.textsms), 
-          icon: Icon(Icons.textsms_outlined), 
-          label: 'Feature Request'
-        ),
-        NavigationDestination(
           selectedIcon: Icon(Icons.star), 
           icon: Icon(Icons.star_outline), 
           label: 'Favorites'
         ),
       ];
-      
 
     var mainPage = Container(
       alignment: Alignment.center,
@@ -135,24 +129,30 @@ class _MainPageState extends State<MainPage> {
         body: GridView.count(
           crossAxisCount: 3,
           children: <Widget>[
-            ElevatedButton(
-              onPressed: (){
+            IconButton(
+                icon: const Icon(
+                  Icons.sms,
+                ),
+                onPressed : (){
                 Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const CounterPage()),
+                  context,
+                  MaterialPageRoute(builder: (context) => const RequestFeaturePage()),
                 );
               }, 
-              child: const  Text('Counter')
             ),
-            ElevatedButton(
-              onPressed: (){
+            
+            IconButton(
+                icon: const Icon(
+                  Icons.star,
+                ),
+                onPressed : (){
                 Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const RequestFeaturePage()),
+                  context,
+                  MaterialPageRoute(builder: (context) => const FavoritesPage()),
                 );
               }, 
-              child: const Text('Feature Request')
             ),
+            
           ]
         )
       )
