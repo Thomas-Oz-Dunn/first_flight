@@ -27,19 +27,6 @@ const gray =  Color.fromARGB(255, 32, 32, 45);
 // [] Query Page
 // [] Viz/AR Page
 // [9/10] Request Page
-//
-// Query Page
-// ----------
-// 1. Search satellite names
-// 2. Connect to Device's GPS or enter manually
-// 3. Select API (Default N2YO) 
-//    - CELESTRAK 
-//    - N2YO
-//    - etc
-// 4. Query site for data, handle error
-// 5. Return next Az, El, time, brightness, trajectory
-// 6. Open viz page
-
 
 
 void main() { 
@@ -76,7 +63,7 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPageState extends State<MainPage> {
-  int currentPageIndex = 2;
+  int currentPageIndex = 0;
 
   void updatePageIndex(int index) {
       setState(() {currentPageIndex = index;});
@@ -139,31 +126,16 @@ class _MainPageState extends State<MainPage> {
                   MaterialPageRoute(builder: (context) => const RequestFeaturePage()),
                 );
               }, 
-            ),
-            
-            IconButton(
-                icon: const Icon(
-                  Icons.star,
-                ),
-                onPressed : (){
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const FavoritesPage()),
-                );
-              }, 
-            ),
-            
+            ),          
           ]
         )
       )
     );
 
     var pages = <Widget>[
+        mainPage,
         const CounterPage(),
         const CameraPage(),
-        mainPage,
-        const LocaterPage(),
-        const RequestFeaturePage(),
         const FavoritesPage(),
       ];
     
@@ -259,6 +231,9 @@ class _CounterPageState extends State<CounterPage> {
   int _counter = 0;
   SharedPreferences? preferences;
 
+  bool hasPos = false;
+  late Position _currentPosition;
+
   Future<void> initStorage() async {
     preferences = await SharedPreferences.getInstance();
 
@@ -304,8 +279,50 @@ class _CounterPageState extends State<CounterPage> {
     });
   }
 
+  void _getCurrentLocation() {
+    Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.best, 
+        forceAndroidLocationManager: true)
+      .then((Position position) {
+        setState(() {
+          _currentPosition = position;
+          hasPos = true;
+        });
+      }).catchError((e) {
+          hasPos = false;
+      });
+  }
+
   @override
   Widget build(BuildContext context) {
+
+    var getLocationButton = <Widget>[
+        FloatingActionButton(
+          backgroundColor: teal,
+          foregroundColor: white,
+          child: const Text(
+            "Get location",
+            style: TextStyle(
+              color: white
+            )
+          ),
+          onPressed: () {
+            _getCurrentLocation();
+          },
+        ),
+        if (hasPos == true) Text(
+          "Latitude: ${_currentPosition.latitude}\n"
+          "Longitude: ${_currentPosition.longitude}",
+          style: const TextStyle(
+            color: white
+          )
+        ) else const Text(
+          'Unknown Location',
+          style: TextStyle(
+            color: white
+          )
+        ),
+      ];
 
     var buttons = <Widget>[
       FloatingActionButton(
@@ -335,6 +352,8 @@ class _CounterPageState extends State<CounterPage> {
         ),
       ],
     );
+
+    const spacer = SizedBox(height: objSpacing);
 
     var pageBody = Scaffold(
       appBar: AppBar(
@@ -367,8 +386,15 @@ class _CounterPageState extends State<CounterPage> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: buttons
             ),
-            const SizedBox(height: objSpacing),
+            spacer,
             resetButton,
+            spacer,
+            Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: getLocationButton,
+              ),
+            ),
           ],
         ),
       ),
@@ -505,84 +531,6 @@ class _RequestFeatureState extends State<RequestFeaturePage> {
     }
 }
 
-// Locator page
-class LocaterPage extends StatefulWidget {
-  const LocaterPage({super.key});
-
-  @override
-  State<LocaterPage> createState() => _LocaterPageState();
-}
-
-class _LocaterPageState extends State<LocaterPage> {
-  bool hasPos = false;
-  late Position _currentPosition;
-
-  @override
-  Widget build(BuildContext context) {
-    var getLocationButton = <Widget>[
-      FloatingActionButton(
-        backgroundColor: teal,
-        foregroundColor: white,
-        child: const Text(
-          "Get location",
-          style: TextStyle(
-            color: white
-          )
-        ),
-        onPressed: () {
-          _getCurrentLocation();
-        },
-      ),
-      if (hasPos == true) Text(
-        "Lattitude: ${_currentPosition.latitude}\n"
-        "Longitude: ${_currentPosition.longitude}",
-        style: const TextStyle(
-          color: white
-        )
-      ) else const Text(
-        'Unknown Location',
-        style: TextStyle(
-          color: white
-        )
-      ),
-    ];
-    
-
-
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: black,
-        title: const Text(
-          "Location",
-          style: TextStyle(
-            color: white
-          )
-        ),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: getLocationButton,
-        ),
-      ),
-      backgroundColor: gray
-    );
-  }
-
-  void _getCurrentLocation() {
-    Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.best, 
-        forceAndroidLocationManager: true)
-      .then((Position position) {
-        setState(() {
-          _currentPosition = position;
-          hasPos = true;
-        });
-      }).catchError((e) {
-          hasPos = false;
-      });
-  }
-}
 
 // Favorites page
 class FavoritesPage extends StatefulWidget{
@@ -705,7 +653,7 @@ class _FavoritesState extends State<FavoritesPage> {
   @override
   Widget build(BuildContext context) {
 
-    // removeSwipe
+    // TODO-TD: removeSwipe
     var addFavButtonAppBar = <Widget>[
       IconButton(
         icon: const Icon(
@@ -720,7 +668,7 @@ class _FavoritesState extends State<FavoritesPage> {
       )
     ];
 
-    return Scaffold(
+    var pageLayout = Scaffold(
       appBar: AppBar(
         backgroundColor: black,
         title: const Text(
@@ -734,5 +682,29 @@ class _FavoritesState extends State<FavoritesPage> {
       body: _buildList(),
       backgroundColor: gray
     );
+
+    return pageLayout;
   }
 }
+
+
+
+
+
+
+// Enter sat name
+//  - Return either similar names for actual query or TLE
+//  - Save either
+// Enter location
+//  - Use GPS
+//  - Manual
+// Enter How far ahead to look
+// Run
+//  Propogate to time
+//  Check when overhead lla
+//  Check is sunlit, night, and cloudless
+//  Return [(start az, el, time, stop az, el, time), ]
+// Access gyroscope and magnetometer
+// Open Camera
+// Display trajectory over camera view
+
