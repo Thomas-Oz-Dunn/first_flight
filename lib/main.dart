@@ -134,7 +134,26 @@ class _MainPageState extends State<MainPage> {
         ),
         body: GridView.count(
           crossAxisCount: 3,
-          children: navigationDests
+          children: <Widget>[
+            ElevatedButton(
+              onPressed: (){
+                Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const CounterPage()),
+                );
+              }, 
+              child: const  Text('Counter')
+            ),
+            ElevatedButton(
+              onPressed: (){
+                Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const RequestFeaturePage()),
+                );
+              }, 
+              child: const Text('Feature Request')
+            ),
+          ]
         )
       )
     );
