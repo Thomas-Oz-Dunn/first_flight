@@ -4,6 +4,7 @@ import 'package:camera/camera.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
+import 'package:ar_flutter_plugin/ar_flutter_plugin.dart';
 
 // Internal imports
 // import 'package:first_flight/vizPage.dart'
@@ -95,11 +96,6 @@ class _MainPageState extends State<MainPage> {
           label: 'Home',
         ),
         NavigationDestination(
-          selectedIcon: Icon(Icons.satellite),
-          icon: Icon(Icons.satellite_outlined),
-          label: 'Locate',
-        ),
-        NavigationDestination(
           selectedIcon: Icon(Icons.star), 
           icon: Icon(Icons.star_outline), 
           label: 'Favorites'
@@ -113,7 +109,7 @@ class _MainPageState extends State<MainPage> {
           title: const Text('Home'),
         ),
         body: GridView.count(
-          crossAxisCount: 3,
+          crossAxisCount: 1,
           children: <Widget>[
             IconButton(
                 icon: const Icon(
@@ -132,9 +128,9 @@ class _MainPageState extends State<MainPage> {
     );
 
     var pages = <Widget>[
-        mainPage,
         const CounterPage(),
         const CameraPage(),
+        mainPage,
         const FavoritesPage(),
       ];
     
@@ -171,7 +167,7 @@ class _CameraPageState extends State<CameraPage> {
   Future<void> _initCamera() async {
     List<CameraDescription> cameras = await availableCameras();
 
-    controller = CameraController(
+    CameraController controller = CameraController(
       cameras[frontCamera], 
       ResolutionPreset.max
     );
@@ -197,8 +193,8 @@ class _CameraPageState extends State<CameraPage> {
 
   @override
   void initState() {
-    super.initState();
     _initCamera();
+    super.initState();
   }
 
   @override
@@ -378,6 +374,7 @@ class _CounterPageState extends State<CounterPage> {
           backgroundColor: teal,
           foregroundColor: white,
           child: const Text(
+            textAlign: TextAlign.center,
             "Get location",
             style: TextStyle(
               color: white
@@ -472,6 +469,12 @@ class _CounterPageState extends State<CounterPage> {
                 children: getLocationButton,
               ),
             ),
+            Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: manualEntryLocationButton
+              )
+            )
           ],
         ),
       ),
@@ -621,7 +624,7 @@ class FavoritesPage extends StatefulWidget{
 
 class _FavoritesState extends State<FavoritesPage> {
   SharedPreferences? preferences;
-  late List<String> favorites;
+  List<String> favorites = ['First'];
 
   Future<void> initStorage() async {
     preferences = await SharedPreferences.getInstance();
@@ -630,8 +633,8 @@ class _FavoritesState extends State<FavoritesPage> {
 
   @override
   void initState() {
-    super.initState();
     initStorage();
+    super.initState();
   }
 
   void _addFavorite(name){

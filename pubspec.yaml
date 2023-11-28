@@ -16,8 +16,9 @@ dependencies:
   url_launcher: ^6.2.1
   animations: ^2.0.8
   flutter_native_splash: ^2.3.5
-  geolocator: ^10.1.0
+  geolocator: ^9.0.0
   cupertino_icons: ^1.0.2
+  ar_flutter_plugin: ^0.7.3
 
 dev_dependencies:
   flutter_test:
