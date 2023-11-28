@@ -26,7 +26,6 @@ const gray =  Color.fromARGB(255, 32, 32, 45);
 // [] View/Clear History
 // [] Query Page
 // [] Viz/AR Page
-// [9/10] Request Page
 
 
 void main() { 
@@ -233,6 +232,32 @@ class _CounterPageState extends State<CounterPage> {
 
   bool hasPos = false;
   late Position _currentPosition;
+  late List<String> locations;
+
+
+  void _addLocation(name){
+    locations.add(name);
+    preferences?.setStringList("Locations", locations);
+    setState(() {});
+  }
+
+  void _loadLocation(){
+    List<String>? savedData = preferences?.getStringList('Locations');
+    
+    if (savedData == null) {
+      preferences?.setStringList("Locations", locations);
+    } else {
+      locations = savedData;
+    }
+
+    setState(() {});
+  }
+
+  void _removeLocation(name){
+    locations.remove(name);
+    preferences?.setStringList("Locations", locations);
+    setState(() {});
+  }
 
   Future<void> initStorage() async {
     preferences = await SharedPreferences.getInstance();
@@ -293,8 +318,60 @@ class _CounterPageState extends State<CounterPage> {
       });
   }
 
+  final _textFieldController = TextEditingController();
+
+  Future<String?> _showTextInputDialog(BuildContext context) async {
+
+    var dialogBox = AlertDialog(
+      title: const Text(
+        'Add new location',
+        style: TextStyle(
+          color: white
+        )
+      ),
+      content: TextField(
+        controller: _textFieldController,
+        decoration: const InputDecoration(hintText: "New Location"),
+      ),
+      actions: <Widget>[
+        ElevatedButton(
+          child: const Text("Exit"),
+          onPressed: () => Navigator.pop(context),
+        ),
+        ElevatedButton(
+          child: const Text('Add'),
+          onPressed: () => Navigator.pop(
+            context, 
+            _textFieldController.text
+          ),
+        ),
+      ],
+    );
+
+    return showDialog(
+        context: context,
+        builder: (context) {
+          return dialogBox;
+        });
+    }
+
   @override
   Widget build(BuildContext context) {
+    var manualEntryLocationButton = <Widget>[
+      IconButton(
+        icon: const Icon(
+          Icons.satellite,
+        ),
+        onPressed: () async {
+          var resultLabel = await _showTextInputDialog(context);
+          if (resultLabel != null) {
+            setState((){_addLocation(resultLabel);});
+          }
+        }
+      )
+    ];
+
+    var loadSaveLocateButtons;
 
     var getLocationButton = <Widget>[
         FloatingActionButton(
@@ -315,7 +392,7 @@ class _CounterPageState extends State<CounterPage> {
           "Longitude: ${_currentPosition.longitude}",
           style: const TextStyle(
             color: white
-          )
+          ),
         ) else const Text(
           'Unknown Location',
           style: TextStyle(
@@ -544,7 +621,7 @@ class FavoritesPage extends StatefulWidget{
 
 class _FavoritesState extends State<FavoritesPage> {
   SharedPreferences? preferences;
-  List<String> favorites = ["First"];
+  late List<String> favorites;
 
   Future<void> initStorage() async {
     preferences = await SharedPreferences.getInstance();
@@ -583,12 +660,11 @@ class _FavoritesState extends State<FavoritesPage> {
 
   Widget _buildList() {
       _loadFavorites();
-
-      return ListView.builder(
+      var listBuilder = ListView.builder(
         padding: const EdgeInsets.all(16.0),
         itemBuilder: (context, itemIdxs) {
           if (itemIdxs < favorites.length){
-            return ListTile(
+              var favoriteTiles = ListTile(
               title: Text(
                 favorites[itemIdxs], 
                 style: const TextStyle(
@@ -604,10 +680,12 @@ class _FavoritesState extends State<FavoritesPage> {
                 },
               )
             );
+            return favoriteTiles;
           }
         },
       );
-      }
+      return listBuilder;
+    }
 
   final _textFieldController = TextEditingController();
 
@@ -626,19 +704,15 @@ class _FavoritesState extends State<FavoritesPage> {
       ),
       actions: <Widget>[
         ElevatedButton(
-          child: const Text(
-            "Exit",
-          ),
+          child: const Text("Exit"),
           onPressed: () => Navigator.pop(context),
         ),
         ElevatedButton(
-          child: const Text(
-            'Add',
-          ),
+          child: const Text('Add'),
           onPressed: () => Navigator.pop(
             context, 
             _textFieldController.text
-            ),
+          ),
         ),
       ],
     );
@@ -653,7 +727,6 @@ class _FavoritesState extends State<FavoritesPage> {
   @override
   Widget build(BuildContext context) {
 
-    // TODO-TD: removeSwipe
     var addFavButtonAppBar = <Widget>[
       IconButton(
         icon: const Icon(
