@@ -96,6 +96,35 @@ class _MainPageState extends State<MainPage> {
           label: 'Favorites'
         ),
       ];
+      
+      var thingy = Scaffold(
+        appBar: AppBar(title: const Text('Tasks - Bottom App Bar')),
+        floatingActionButton: FloatingActionButton.extended(
+          elevation: 4.0,
+          icon: const Icon(Icons.add),
+          label: const Text('Add a task'),
+          onPressed: () {},
+        ),
+        floatingActionButtonLocation: 
+          FloatingActionButtonLocation.centerDocked,
+        bottomNavigationBar: BottomAppBar(
+          notchMargin: 24,
+          child: Row(
+            mainAxisSize: MainAxisSize.max,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              IconButton(
+                icon: Icon(Icons.menu),
+                onPressed: () {},
+              ),
+              IconButton(
+                icon: Icon(Icons.search),
+                onPressed: () {},
+              )
+            ],
+          ),
+        ),
+      );
 
     var mainPage = Container(
       alignment: Alignment.center,
@@ -134,8 +163,8 @@ class _MainPageState extends State<MainPage> {
     );
 
     var pages = <Widget>[
-        const CounterPage(),
         mainPage,
+        const CounterPage(),
         const FavoritesPage(),
       ];
     
