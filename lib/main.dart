@@ -86,11 +86,6 @@ class _MainPageState extends State<MainPage> {
           label: 'Counter',
         ),
         NavigationDestination(
-          selectedIcon: Icon(Icons.camera),
-          icon: Icon(Icons.camera_outlined),
-          label: 'Camera',
-        ),
-        NavigationDestination(
           selectedIcon: Icon(Icons.home),
           icon: Icon(Icons.home_outlined),
           label: 'Home',
@@ -109,19 +104,30 @@ class _MainPageState extends State<MainPage> {
           title: const Text('Home'),
         ),
         body: GridView.count(
-          crossAxisCount: 1,
+          crossAxisCount: 3,
           children: <Widget>[
             IconButton(
-                icon: const Icon(
-                  Icons.sms,
-                ),
+                icon: const Icon(Icons.sms),
                 onPressed : (){
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const RequestFeaturePage()),
+                  MaterialPageRoute(
+                    builder: (context) => const RequestFeaturePage()
+                  ),
                 );
               }, 
-            ),          
+            ),   
+            IconButton(
+                icon: const Icon(Icons.camera),
+                onPressed : (){
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const CameraPage()
+                  ),
+                );
+              }, 
+            ),   
           ]
         )
       )
@@ -129,7 +135,6 @@ class _MainPageState extends State<MainPage> {
 
     var pages = <Widget>[
         const CounterPage(),
-        const CameraPage(),
         mainPage,
         const FavoritesPage(),
       ];
@@ -415,7 +420,7 @@ class _CounterPageState extends State<CounterPage> {
     ];
 
     var resetButton = Row( 
-      mainAxisAlignment: MainAxisAlignment.center,
+      mainAxisAlignment: MainAxisAlignment.end,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: <Widget> [
         FloatingActionButton(
