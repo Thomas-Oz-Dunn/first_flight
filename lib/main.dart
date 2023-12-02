@@ -63,11 +63,11 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPageState extends State<MainPage> {
-  int currentPageIndex = 0;
+  int currentPageIndex = 1;
 
-  void updatePageIndex(int index) {
-      setState(() {currentPageIndex = index;});
-  }
+  // void updatePageIndex(int index) {
+  //     setState(() {currentPageIndex = index;});
+  // }
 
   @override
   void initState() {
@@ -79,53 +79,6 @@ class _MainPageState extends State<MainPage> {
 
   @override
   Widget build(BuildContext context) {
-    const navigationDests = <Widget>[
-        NavigationDestination(
-          selectedIcon: Icon(Icons.add),
-          icon: Icon(Icons.add),
-          label: 'Counter',
-        ),
-        NavigationDestination(
-          selectedIcon: Icon(Icons.home),
-          icon: Icon(Icons.home_outlined),
-          label: 'Home',
-        ),
-        NavigationDestination(
-          selectedIcon: Icon(Icons.star), 
-          icon: Icon(Icons.star_outline), 
-          label: 'Favorites'
-        ),
-      ];
-      
-      var thingy = Scaffold(
-        appBar: AppBar(title: const Text('Tasks - Bottom App Bar')),
-        floatingActionButton: FloatingActionButton.extended(
-          elevation: 4.0,
-          icon: const Icon(Icons.add),
-          label: const Text('Add a task'),
-          onPressed: () {},
-        ),
-        floatingActionButtonLocation: 
-          FloatingActionButtonLocation.centerDocked,
-        bottomNavigationBar: BottomAppBar(
-          notchMargin: 24,
-          child: Row(
-            mainAxisSize: MainAxisSize.max,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: <Widget>[
-              IconButton(
-                icon: Icon(Icons.menu),
-                onPressed: () {},
-              ),
-              IconButton(
-                icon: Icon(Icons.search),
-                onPressed: () {},
-              )
-            ],
-          ),
-        ),
-      );
-
     var mainPage = Container(
       alignment: Alignment.center,
       child: Scaffold(
@@ -163,23 +116,85 @@ class _MainPageState extends State<MainPage> {
     );
 
     var pages = <Widget>[
-        mainPage,
         const CounterPage(),
+        mainPage,
         const FavoritesPage(),
       ];
-    
-    var mainPageLayout = Scaffold(
-      bottomNavigationBar: NavigationBar(
-        onDestinationSelected: updatePageIndex,
-        indicatorColor: teal,
-        selectedIndex: currentPageIndex,
-        destinations: navigationDests,
-      ),
-      body: pages[currentPageIndex],
-      backgroundColor: gray
-    );
 
-    return mainPageLayout;
+    const navigationDests = <Widget>[
+        NavigationDestination(
+          selectedIcon: Icon(Icons.add),
+          icon: Icon(Icons.add),
+          label: 'Counter',
+        ),
+        NavigationDestination(
+          selectedIcon: Icon(Icons.home),
+          icon: Icon(Icons.home_outlined),
+          label: 'Home',
+        ),
+        NavigationDestination(
+          selectedIcon: Icon(Icons.star), 
+          icon: Icon(Icons.star_outline), 
+          label: 'Favorites'
+        ),
+      ];
+      
+      var thingy = Scaffold(
+        appBar: AppBar(title: const Text('Tasks - Bottom App Bar')),
+        floatingActionButton: FloatingActionButton.extended(
+          elevation: 4.0,
+          icon: const Icon(Icons.add),
+          label: const Text('Add a task'),
+          onPressed: () {
+
+          },
+        ),
+        floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+        body: pages[currentPageIndex],
+        bottomNavigationBar: BottomAppBar(
+          notchMargin: 24,
+          child: Row(
+            mainAxisSize: MainAxisSize.max,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              IconButton(
+                icon: const Icon(Icons.exposure_minus_1),
+                onPressed: () {
+                  setState(() {
+                    if (currentPageIndex != 0) {
+                      currentPageIndex--;
+                    } 
+                  });
+                },
+              ),
+              IconButton(
+                icon: const Icon(Icons.exposure_plus_1),
+                onPressed: () {
+                  setState(() {
+                    if (currentPageIndex != pages.length) {
+                      currentPageIndex++;
+                    } 
+                  });
+                },
+              )
+            ],
+          ),
+        ),
+      );
+
+    
+    // var mainPageLayout = Scaffold(
+    //   bottomNavigationBar: NavigationBar(
+    //     onDestinationSelected: updatePageIndex,
+    //     indicatorColor: teal,
+    //     selectedIndex: currentPageIndex,
+    //     destinations: navigationDests,
+    //   ),
+    //   body: pages[currentPageIndex],
+    //   backgroundColor: gray
+    // );
+
+    return thingy;
   }
 }
 
