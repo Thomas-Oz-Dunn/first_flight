@@ -63,6 +63,7 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPageState extends State<MainPage> {
+  int defaultPageIndex = 1;
   int currentPageIndex = 1;
 
   // void updatePageIndex(int index) {
@@ -121,32 +122,13 @@ class _MainPageState extends State<MainPage> {
         const FavoritesPage(),
       ];
 
-    const navigationDests = <Widget>[
-        NavigationDestination(
-          selectedIcon: Icon(Icons.add),
-          icon: Icon(Icons.add),
-          label: 'Counter',
-        ),
-        NavigationDestination(
-          selectedIcon: Icon(Icons.home),
-          icon: Icon(Icons.home_outlined),
-          label: 'Home',
-        ),
-        NavigationDestination(
-          selectedIcon: Icon(Icons.star), 
-          icon: Icon(Icons.star_outline), 
-          label: 'Favorites'
-        ),
-      ];
-      
       var thingy = Scaffold(
-        appBar: AppBar(title: const Text('Tasks - Bottom App Bar')),
         floatingActionButton: FloatingActionButton.extended(
           elevation: 4.0,
-          icon: const Icon(Icons.add),
-          label: const Text('Add a task'),
+          icon: const Icon(Icons.home),
+          label: const Text('Home'),
           onPressed: () {
-
+            currentPageIndex = defaultPageIndex;
           },
         ),
         floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
@@ -158,7 +140,7 @@ class _MainPageState extends State<MainPage> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
               IconButton(
-                icon: const Icon(Icons.exposure_minus_1),
+                icon: const Icon(Icons.arrow_back),
                 onPressed: () {
                   setState(() {
                     if (currentPageIndex != 0) {
@@ -168,7 +150,7 @@ class _MainPageState extends State<MainPage> {
                 },
               ),
               IconButton(
-                icon: const Icon(Icons.exposure_plus_1),
+                icon: const Icon(Icons.arrow_forward),
                 onPressed: () {
                   setState(() {
                     if (currentPageIndex != pages.length) {
@@ -181,18 +163,6 @@ class _MainPageState extends State<MainPage> {
           ),
         ),
       );
-
-    
-    // var mainPageLayout = Scaffold(
-    //   bottomNavigationBar: NavigationBar(
-    //     onDestinationSelected: updatePageIndex,
-    //     indicatorColor: teal,
-    //     selectedIndex: currentPageIndex,
-    //     destinations: navigationDests,
-    //   ),
-    //   body: pages[currentPageIndex],
-    //   backgroundColor: gray
-    // );
 
     return thingy;
   }
@@ -721,6 +691,7 @@ class _FavoritesState extends State<FavoritesPage> {
                 favorites[itemIdxs], 
                 style: const TextStyle(
                   fontSize: 18.0,
+                  color: white
                 )
               ),
               trailing: IconButton(
