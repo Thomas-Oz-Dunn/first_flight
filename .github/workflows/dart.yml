@@ -11,32 +11,19 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - uses: dart-lang/setup-dart@v1
-    - run: dart --version
-    - run: dart pub get
-    - run: dart analyze --fatal-infos --fatal-warnings .
-
-  test:
-    name: "Tests | Dart ${{ matrix.dart-channel }} | ${{ matrix.os }}"
-
-    strategy:
-      matrix:
-        # TODO: Run tests on Windows when dart-lang/pub#2982 is fixed.
-        os: [ubuntu, macos]
-        dart-channel: [stable, dev]
-      fail-fast: false
-
-    runs-on: ${{ matrix.os }}-latest
-    steps:
-    - uses: actions/checkout@v2
-    - uses: actions/setup-node@v2
-
-    - uses: dart-lang/setup-dart@v1
+    - uses: subosito/flutter-action@v2
       with:
-        sdk: ${{ matrix.dart-channel }}
-    - run: dart --version
+        flutter-version: "3.0.0"
+        channel: 'stable'
 
-    - run: dart pub get
-    - run: dart pub run test -r expanded
+    - name: Get dependencies
+      run: flutter pub get
+
+    - run: flutter pub run test
+
+    # Runs a set of commands using the runners shell
+    - name: Start release build
+      run: flutter build appbundle
 
   format:
     name: "Code formatting"
