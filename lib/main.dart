@@ -4,17 +4,11 @@ import 'package:camera/camera.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
-import 'package:ar_flutter_plugin/ar_flutter_plugin.dart';
+// import 'package:ar_flutter_plugin/ar_flutter_plugin.dart';
 
 // Internal imports
-// import 'package:first_flight/vizPage.dart'
-
-const double objSpacing = 10;
-const teal =  Color.fromARGB(255, 15, 83, 157);
-const blue = Color.fromARGB(255, 15, 134, 122);
-const white = Color.fromARGB(185, 255, 255, 255);
-const black =  Color.fromARGB(255, 0, 0, 5);
-const gray =  Color.fromARGB(255, 32, 32, 45);
+import 'package:first_flight/settings_page.dart';
+import 'package:first_flight/style.dart';
 
 // Goals of the app
 // Produce notifications of any Favorites, ISS, or Starlink
@@ -69,9 +63,7 @@ class _MainPageState extends State<MainPage> {
   @override
   void initState() {
     super.initState();
-    Future.delayed(const Duration(seconds: 10), () {
-      FlutterNativeSplash.remove();
-    });
+    FlutterNativeSplash.remove();
   }
 
   @override
@@ -80,6 +72,20 @@ class _MainPageState extends State<MainPage> {
       alignment: Alignment.center,
       child: Scaffold(
         appBar: AppBar(
+          leading: 
+            IconButton(
+              icon: const Icon(
+                Icons.star,
+              ),
+              onPressed : (){
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const SettingsPage()
+                  ),
+                );
+              }, 
+            ),
           title: const Text('Home'),
         ),
         body: GridView.count(
@@ -228,6 +234,7 @@ class _CameraPageState extends State<CameraPage> {
     );
   }
 }
+
 // Counter page
 class CounterPage extends StatefulWidget {
   const CounterPage({super.key});
@@ -789,10 +796,6 @@ class _FavoritesState extends State<FavoritesPage> {
     return pageLayout;
   }
 }
-
-
-
-
 
 
 // Enter sat name
