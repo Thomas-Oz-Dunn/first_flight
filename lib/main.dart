@@ -66,10 +66,6 @@ class _MainPageState extends State<MainPage> {
   int defaultPageIndex = 1;
   int currentPageIndex = 1;
 
-  // void updatePageIndex(int index) {
-  //     setState(() {currentPageIndex = index;});
-  // }
-
   @override
   void initState() {
     super.initState();
@@ -122,7 +118,7 @@ class _MainPageState extends State<MainPage> {
         const FavoritesPage(),
       ];
 
-      var thingy = Scaffold(
+      var mainPageLayout = Scaffold(
         floatingActionButton: FloatingActionButton.extended(
           elevation: 4.0,
           icon: const Icon(Icons.home),
@@ -164,7 +160,7 @@ class _MainPageState extends State<MainPage> {
         ),
       );
 
-    return thingy;
+    return mainPageLayout;
   }
 }
 
@@ -383,10 +379,21 @@ class _CounterPageState extends State<CounterPage> {
             setState((){_addLocation(resultLabel);});
           }
         }
-      )
+      ),
+      IconButton(
+        icon: const Icon(
+          Icons.download,
+        ),
+        onPressed: () async {
+          var resultLabel = await _showTextInputDialog(context);
+          if (resultLabel != null) {
+            setState((){
+              _loadLocation();
+            });
+          }
+        }
+      ),
     ];
-
-    var loadSaveLocateButtons;
 
     var getLocationButton = <Widget>[
         FloatingActionButton(
@@ -434,7 +441,7 @@ class _CounterPageState extends State<CounterPage> {
     ];
 
     var resetButton = Row( 
-      mainAxisAlignment: MainAxisAlignment.end,
+      mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: <Widget> [
         FloatingActionButton(
