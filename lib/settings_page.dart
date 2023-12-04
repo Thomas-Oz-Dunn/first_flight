@@ -4,16 +4,14 @@ import 'package:first_flight/style.dart';
 import 'package:first_flight/sett_model.dart';
 
 // Settings page
-class SettingsPage extends StatefulWidget{
-  
+class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
 
   @override
   State<SettingsPage> createState() => _SettingsState();
-
 }
 
-class _SettingsState extends State<SettingsPage>{
+class _SettingsState extends State<SettingsPage> {
   late SettModel _model;
 
   final scaffoldKey = GlobalKey<ScaffoldState>();
@@ -30,13 +28,8 @@ class _SettingsState extends State<SettingsPage>{
     super.dispose();
   }
 
-
-
-
   Widget _buildList() {
-    return ListView(
-
-    );
+    return ListView();
   }
 
   @override
@@ -63,24 +56,14 @@ class _SettingsState extends State<SettingsPage>{
       ),
     );
 
-
     var pageLayout = Scaffold(
-      appBar: AppBar(
-        backgroundColor: black,
-        title: const Text(
-          'Settings',
-          style: TextStyle(
-            color: white
-          )
+        appBar: AppBar(
+          backgroundColor: black,
+          title: const Text('Settings', style: TextStyle(color: white)),
         ),
-      ),
-      body: Column(
-        mainAxisSize: MainAxisSize.max,
-        children: [widgets]
-      ),
-    backgroundColor: gray
-    );
+        body: Column(mainAxisSize: MainAxisSize.max, children: [widgets]),
+        backgroundColor: gray);
 
     return pageLayout;
-    }
+  }
 }
