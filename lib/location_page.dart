@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:geolocator/geolocator.dart';
@@ -22,16 +21,15 @@ class _LocaterPageState extends State<LocaterPage> {
   late Position _currentPosition;
   late List<String> locations;
 
-
-  void _addLocation(name){
+  void _addLocation(name) {
     locations.add(name);
     preferences?.setStringList("Locations", locations);
     setState(() {});
   }
 
-  void _loadLocation(){
+  void _loadLocation() {
     List<String>? savedData = preferences?.getStringList('Locations');
-    
+
     if (savedData == null) {
       preferences?.setStringList("Locations", locations);
     } else {
@@ -41,7 +39,7 @@ class _LocaterPageState extends State<LocaterPage> {
     setState(() {});
   }
 
-  void _removeLocation(name){
+  void _removeLocation(name) {
     locations.remove(name);
     preferences?.setStringList("Locations", locations);
     setState(() {});
@@ -52,7 +50,7 @@ class _LocaterPageState extends State<LocaterPage> {
 
     // init 1st time to defaultValue
     int? savedData = preferences?.getInt("counter");
-    
+
     if (savedData == null) {
       await preferences!.setInt("counter", defaultValue);
       _counter = defaultValue;
@@ -94,29 +92,23 @@ class _LocaterPageState extends State<LocaterPage> {
 
   void _getCurrentLocation() {
     Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.best, 
-        forceAndroidLocationManager: true)
-      .then((Position position) {
-        setState(() {
-          _currentPosition = position;
-          hasPos = true;
-        });
-      }).catchError((e) {
-          hasPos = false;
+            desiredAccuracy: LocationAccuracy.best,
+            forceAndroidLocationManager: true)
+        .then((Position position) {
+      setState(() {
+        _currentPosition = position;
+        hasPos = true;
       });
+    }).catchError((e) {
+      hasPos = false;
+    });
   }
 
   final _textFieldController = TextEditingController();
 
   Future<String?> _showTextInputDialog(BuildContext context) async {
-
     var dialogBox = AlertDialog(
-      title: const Text(
-        'Add new location',
-        style: TextStyle(
-          color: white
-        )
-      ),
+      title: const Text('Add new location', style: TextStyle(color: white)),
       content: TextField(
         controller: _textFieldController,
         decoration: const InputDecoration(hintText: "New Location"),
@@ -128,10 +120,7 @@ class _LocaterPageState extends State<LocaterPage> {
         ),
         ElevatedButton(
           child: const Text('Add'),
-          onPressed: () => Navigator.pop(
-            context, 
-            _textFieldController.text
-          ),
+          onPressed: () => Navigator.pop(context, _textFieldController.text),
         ),
       ],
     );
@@ -141,65 +130,58 @@ class _LocaterPageState extends State<LocaterPage> {
         builder: (context) {
           return dialogBox;
         });
-    }
+  }
 
   @override
   Widget build(BuildContext context) {
     var manualEntryLocationButton = <Widget>[
       IconButton(
-        icon: const Icon(
-          Icons.satellite,
-        ),
-        onPressed: () async {
-          var resultLabel = await _showTextInputDialog(context);
-          if (resultLabel != null) {
-            setState((){_addLocation(resultLabel);});
-          }
-        }
-      ),
+          icon: const Icon(
+            Icons.satellite,
+          ),
+          onPressed: () async {
+            var resultLabel = await _showTextInputDialog(context);
+            if (resultLabel != null) {
+              setState(() {
+                _addLocation(resultLabel);
+              });
+            }
+          }),
       IconButton(
-        icon: const Icon(
-          Icons.download,
-        ),
-        onPressed: () async {
-          var resultLabel = await _showTextInputDialog(context);
-          if (resultLabel != null) {
-            setState((){
-              _loadLocation();
-            });
-          }
-        }
-      ),
+          icon: const Icon(
+            Icons.download,
+          ),
+          onPressed: () async {
+            var resultLabel = await _showTextInputDialog(context);
+            if (resultLabel != null) {
+              setState(() {
+                _loadLocation();
+              });
+            }
+          }),
     ];
 
     var getLocationButton = <Widget>[
-        FloatingActionButton(
-          backgroundColor: teal,
-          foregroundColor: white,
-          child: const Text(
+      FloatingActionButton(
+        backgroundColor: teal,
+        foregroundColor: white,
+        child: const Text(
             textAlign: TextAlign.center,
             "Get location",
-            style: TextStyle(
-              color: white
-            )
-          ),
-          onPressed: () {
-            _getCurrentLocation();
-          },
-        ),
-        if (hasPos == true) Text(
+            style: TextStyle(color: white)),
+        onPressed: () {
+          _getCurrentLocation();
+        },
+      ),
+      if (hasPos == true)
+        Text(
           "Latitude: ${_currentPosition.latitude}\n"
           "Longitude: ${_currentPosition.longitude}",
-          style: const TextStyle(
-            color: white
-          ),
-        ) else const Text(
-          'Unknown Location',
-          style: TextStyle(
-            color: white
-          )
-        ),
-      ];
+          style: const TextStyle(color: white),
+        )
+      else
+        const Text('Unknown Location', style: TextStyle(color: white)),
+    ];
 
     var buttons = <Widget>[
       FloatingActionButton(
@@ -214,13 +196,13 @@ class _LocaterPageState extends State<LocaterPage> {
         tooltip: 'Increment',
         backgroundColor: Colors.green,
         child: const Icon(Icons.exposure_plus_1),
-      ), 
+      ),
     ];
 
-    var resetButton = Row( 
+    var resetButton = Row(
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.center,
-      children: <Widget> [
+      children: <Widget>[
         FloatingActionButton(
           onPressed: _resetCounter,
           tooltip: 'Reset',
@@ -233,56 +215,41 @@ class _LocaterPageState extends State<LocaterPage> {
     const spacer = SizedBox(height: objSpacing);
 
     var pageBody = Scaffold(
-      appBar: AppBar(
-        backgroundColor: black,
-        title: const Text(
-          "Counter",
-          style: TextStyle(
-            color: white
-          )
+        appBar: AppBar(
+          backgroundColor: black,
+          title: const Text("Counter", style: TextStyle(color: white)),
         ),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          mainAxisSize: MainAxisSize.max,
-          children: <Widget>[
-            const Text(
-              'The current value is',
-              style: TextStyle(
-                color: white
-              )
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.max,
+            children: <Widget>[
+              const Text('The current value is',
+                  style: TextStyle(color: white)),
+              Text(
+                '$_counter',
+                style: const TextStyle(color: white),
               ),
-            Text(
-              '$_counter', 
-              style: const TextStyle(
-                color: white
+              Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: buttons),
+              spacer,
+              resetButton,
+              spacer,
+              Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: getLocationButton,
+                ),
               ),
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: buttons
-            ),
-            spacer,
-            resetButton,
-            spacer,
-            Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: getLocationButton,
-              ),
-            ),
-            Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: manualEntryLocationButton
-              )
-            )
-          ],
+              Center(
+                  child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: manualEntryLocationButton))
+            ],
+          ),
         ),
-      ),
-      backgroundColor: gray
-    );
+        backgroundColor: gray);
 
     return pageBody;
   }

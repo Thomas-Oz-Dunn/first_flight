@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 
@@ -11,7 +10,6 @@ class CameraPage extends StatefulWidget {
   State<CameraPage> createState() => _CameraPageState();
 }
 
-
 class _CameraPageState extends State<CameraPage> {
   late CameraController controller;
   int rearCamera = 0;
@@ -20,11 +18,9 @@ class _CameraPageState extends State<CameraPage> {
   Future<void> _initCamera() async {
     List<CameraDescription> cameras = await availableCameras();
 
-    CameraController controller = CameraController(
-      cameras[frontCamera], 
-      ResolutionPreset.max
-    );
-    
+    CameraController controller =
+        CameraController(cameras[frontCamera], ResolutionPreset.max);
+
     controller.initialize().then((_) {
       if (!mounted) {
         return;
@@ -60,9 +56,8 @@ class _CameraPageState extends State<CameraPage> {
   Widget build(BuildContext context) {
     return Scaffold(
         body: SafeArea(
-          child: controller.value.isInitialized ? 
-            CameraPreview(controller) : const Center(child: CircularProgressIndicator())
-      )
-    );
+            child: controller.value.isInitialized
+                ? CameraPreview(controller)
+                : const Center(child: CircularProgressIndicator())));
   }
 }

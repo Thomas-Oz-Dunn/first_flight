@@ -11,7 +11,6 @@ import 'package:first_flight/location_page.dart';
 import 'package:first_flight/camera_page.dart';
 import 'package:first_flight/feature_request_page.dart';
 
-
 // Goals of the app
 // Produce notifications of any Favorites, ISS, or Starlink
 // Support dark mode and light mode
@@ -23,7 +22,6 @@ import 'package:first_flight/feature_request_page.dart';
 // [] View/Clear History
 // [] Query Page
 // [] Viz/AR Page
-
 
 // Enter sat name
 //  - Return either similar names for actual query or TLE
@@ -41,8 +39,7 @@ import 'package:first_flight/feature_request_page.dart';
 // Open Camera
 // Display trajectory over camera view
 
-
-void main() { 
+void main() {
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
   runApp(const FirstFlightApp());
@@ -56,12 +53,11 @@ class FirstFlightApp extends StatelessWidget {
     return MaterialApp(
       title: 'First Flight',
       theme: ThemeData(
-        useMaterial3: true,
-        primaryColor: teal,
-        hoverColor: blue,
-        primaryColorDark: black,
-        canvasColor: gray
-      ),
+          useMaterial3: true,
+          primaryColor: teal,
+          hoverColor: blue,
+          primaryColorDark: black,
+          canvasColor: gray),
       debugShowCheckedModeBanner: false,
       home: const MainPage(),
     );
@@ -88,102 +84,92 @@ class _MainPageState extends State<MainPage> {
   @override
   Widget build(BuildContext context) {
     var mainPage = Container(
-      alignment: Alignment.center,
-      child: Scaffold(
-        appBar: AppBar(
-          leading: 
-            IconButton(
-              icon: const Icon(
-                Icons.star,
+        alignment: Alignment.center,
+        child: Scaffold(
+            appBar: AppBar(
+              leading: IconButton(
+                icon: const Icon(
+                  Icons.star,
+                ),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => const SettingsPage()),
+                  );
+                },
               ),
-              onPressed : (){
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const SettingsPage()
-                  ),
-                );
-              }, 
+              title: const Text('Home'),
             ),
-          title: const Text('Home'),
-        ),
-        body: GridView.count(
-          crossAxisCount: 3,
-          children: <Widget>[
-            IconButton(
+            body: GridView.count(crossAxisCount: 3, children: <Widget>[
+              IconButton(
                 icon: const Icon(Icons.sms),
-                onPressed : (){
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const RequestFeaturePage()
-                  ),
-                );
-              }, 
-            ),   
-            IconButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => const RequestFeaturePage()),
+                  );
+                },
+              ),
+              IconButton(
                 icon: const Icon(Icons.camera),
-                onPressed : (){
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const CameraPage()
-                  ),
-                );
-              }, 
-            ),   
-          ]
-        )
-      )
-    );
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const CameraPage()),
+                  );
+                },
+              ),
+            ])));
 
     var pages = <Widget>[
-        const LocaterPage(),
-        mainPage,
-        const FavoritesPage(),
-      ];
+      const LocaterPage(),
+      mainPage,
+      const FavoritesPage(),
+    ];
 
-      var mainPageLayout = Scaffold(
-        floatingActionButton: FloatingActionButton.extended(
-          elevation: 4.0,
-          icon: const Icon(Icons.home),
-          label: const Text('Home'),
-          onPressed: () {
-            currentPageIndex = defaultPageIndex;
-          },
+    var mainPageLayout = Scaffold(
+      floatingActionButton: FloatingActionButton.extended(
+        elevation: 4.0,
+        icon: const Icon(Icons.home),
+        label: const Text('Home'),
+        onPressed: () {
+          currentPageIndex = defaultPageIndex;
+        },
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+      body: pages[currentPageIndex],
+      bottomNavigationBar: BottomAppBar(
+        notchMargin: 24,
+        child: Row(
+          mainAxisSize: MainAxisSize.max,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: <Widget>[
+            IconButton(
+              icon: const Icon(Icons.arrow_back),
+              onPressed: () {
+                setState(() {
+                  if (currentPageIndex != 0) {
+                    currentPageIndex--;
+                  }
+                });
+              },
+            ),
+            IconButton(
+              icon: const Icon(Icons.arrow_forward),
+              onPressed: () {
+                setState(() {
+                  if (currentPageIndex != pages.length) {
+                    currentPageIndex++;
+                  }
+                });
+              },
+            )
+          ],
         ),
-        floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-        body: pages[currentPageIndex],
-        bottomNavigationBar: BottomAppBar(
-          notchMargin: 24,
-          child: Row(
-            mainAxisSize: MainAxisSize.max,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: <Widget>[
-              IconButton(
-                icon: const Icon(Icons.arrow_back),
-                onPressed: () {
-                  setState(() {
-                    if (currentPageIndex != 0) {
-                      currentPageIndex--;
-                    } 
-                  });
-                },
-              ),
-              IconButton(
-                icon: const Icon(Icons.arrow_forward),
-                onPressed: () {
-                  setState(() {
-                    if (currentPageIndex != pages.length) {
-                      currentPageIndex++;
-                    } 
-                  });
-                },
-              )
-            ],
-          ),
-        ),
-      );
+      ),
+    );
 
     return mainPageLayout;
   }
