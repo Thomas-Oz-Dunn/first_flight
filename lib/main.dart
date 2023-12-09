@@ -92,7 +92,11 @@ class _MainPageState extends State<MainPage> {
                   Icons.star,
                 ),
                 onPressed: () {
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => const SettingsPage()),);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => const SettingsPage()),
+                  );
                 },
               ),
               title: const Text('Home'),
