@@ -29,7 +29,7 @@ git reset --soft HEAD^
 cd $(git rev-parse --show-toplevel)
 
 # call the dart formatter on the staged files
-dart format --line-length=120 $staged_files
+dart format --line-length=80 $staged_files
 
 # re-stage any files that were just modified by the formatter
 git add --update
