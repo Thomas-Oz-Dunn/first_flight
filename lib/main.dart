@@ -6,6 +6,7 @@ import 'package:flutter_native_splash/flutter_native_splash.dart';
 // Internal imports
 import 'package:first_flight/style.dart';
 import 'package:first_flight/settings_page.dart';
+import 'package:first_flight/ar_page.dart';
 import 'package:first_flight/favorites_page.dart';
 import 'package:first_flight/location_page.dart';
 import 'package:first_flight/camera_page.dart';
@@ -42,7 +43,8 @@ import 'package:first_flight/feature_request_page.dart';
 void main() {
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
-  runApp(const FirstFlightApp());
+  // runApp(const FirstFlightApp());
+  runApp(ARPage());
 }
 
 class FirstFlightApp extends StatelessWidget {
