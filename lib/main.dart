@@ -46,7 +46,6 @@ void main() {
   // runApp(const FirstFlightApp());
   runApp(ARPage());
 }
-
 class FirstFlightApp extends StatelessWidget {
   const FirstFlightApp({super.key});
 
@@ -91,7 +90,7 @@ class _MainPageState extends State<MainPage> {
             appBar: AppBar(
               leading: IconButton(
                 icon: const Icon(
-                  Icons.star,
+                  Icons.settings,
                 ),
                 onPressed: () {
                   Navigator.push(
@@ -103,27 +102,9 @@ class _MainPageState extends State<MainPage> {
               ),
               title: const Text('Home'),
             ),
-            body: GridView.count(crossAxisCount: 3, children: <Widget>[
-              IconButton(
-                icon: const Icon(Icons.sms),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => const RequestFeaturePage()),
-                  );
-                },
-              ),
-              IconButton(
-                icon: const Icon(Icons.camera),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const CameraPage()),
-                  );
-                },
-              ),
-            ])));
+            
+          )
+          );
 
     var pages = <Widget>[
       const LocaterPage(),
