@@ -158,7 +158,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
   SharedPreferences? preferences;
   String defaultEmail = 'person@email.com';
-  late String email;
+  String email = 'person@email.com';
 
   Future<void> initStorage() async {
     preferences = await SharedPreferences.getInstance();
@@ -222,9 +222,22 @@ class _SettingsPageState extends State<SettingsPage> {
           return dialogBox;
         });
   }
-
   @override
   Widget build(BuildContext context){
+
+    var searchBar = TextField(
+      controller: _textFieldController,
+      decoration: const InputDecoration(
+        labelText: "Search",
+        hintText: "Search Settings",
+        prefixIcon: Icon(Icons.search),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.all(Radius.circular(25.0)
+          )
+        )
+      )
+    );
+
 
     var emailTile = ListTile(
       leading: const Icon(Icons.mail),
@@ -250,54 +263,56 @@ class _SettingsPageState extends State<SettingsPage> {
     );
 
     var themeConsumer = Consumer<ModelThemeProvider>(
-        builder: (context, ModelThemeProvider themeNotifier, child) {
+      builder: (context, ModelThemeProvider themeNotifier, child) {
 
-          var darkmodeTile = ListTile(
-            leading: Icon(
-              themeNotifier.isDark ? Icons.nightlight_round : Icons.wb_sunny
+        var darkmodeTile = ListTile(
+          leading: Icon(
+            themeNotifier.isDark ? Icons.nightlight_round : Icons.wb_sunny
+          ),
+          title: Text(themeNotifier.isDark ? "Dark Mode" : "Light Mode"),
+          trailing: Switch(
+              value: themeNotifier.isDark,
+              activeColor: Colors.purple,
+              onChanged: (val) {
+                setState(() {
+                  themeNotifier.isDark = val;
+                });
+              }
             ),
-            title: Text(themeNotifier.isDark ? "Dark Mode" : "Light Mode"),
-            trailing: Switch(
-                value: themeNotifier.isDark,
-                activeColor: Colors.purple,
-                onChanged: (val) {
-                  setState(() {
-                    themeNotifier.isDark = val;
-                  });
-                }
-              ),
-          );
+        );
 
-          var settingsBody = SingleChildScrollView(
-            child: Container(
-              alignment: Alignment.center,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [Text("Common")],
-                  ),
-                  const ListTile(
-                    leading: Icon(Icons.language),
-                    title: Text("Language"),
-                    subtitle: Text("English"),
-                  ),
-                  const Divider(),
-                  emailTile,
-                  darkmodeTile,
-                ],
-              ),
+        var settingsBody = SingleChildScrollView(
+          child: Container(
+            alignment: Alignment.center,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [Text("Common")],
+                ),
+                const ListTile(
+                  leading: Icon(Icons.language),
+                  title: Text("Language"),
+                  subtitle: Text("English"),
+                ),
+                const Divider(),
+                emailTile,
+                darkmodeTile,
+              ],
             ),
-          );
+          ),
+        );
 
-          return Scaffold(
-            appBar: AppBar(
-              title: const Text("Settings"),
-            ),
-            body: settingsBody
-          );
-        }
+        return Scaffold(
+          appBar: AppBar(
+            title: const Text("Settings"),
+          ),
+          body: Column(
+            children: [searchBar, settingsBody]
+          )
+        );
+      }
     );
     return themeConsumer;
           
