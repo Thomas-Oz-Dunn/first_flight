@@ -136,6 +136,7 @@ class _MainPageState extends State<MainPage> {
     const mapPage = Scaffold(
       body: Column(
         mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
         mainAxisSize: MainAxisSize.max,
         children: <Widget>[
           const Text('Map')
@@ -147,6 +148,7 @@ class _MainPageState extends State<MainPage> {
     const newsPage = Scaffold(
       body: Column(
         mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
         mainAxisSize: MainAxisSize.max,
         children: <Widget>[
           const Text('News')
@@ -158,6 +160,7 @@ class _MainPageState extends State<MainPage> {
     const viewPage = Scaffold(
       body: Column(
         mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
         mainAxisSize: MainAxisSize.max,
         children: <Widget>[
           const Text('View')
@@ -169,6 +172,7 @@ class _MainPageState extends State<MainPage> {
     const historyPage = Scaffold(
       body: Column(
         mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
         mainAxisSize: MainAxisSize.max,
         children: <Widget>[
           const Text('History')
@@ -180,6 +184,7 @@ class _MainPageState extends State<MainPage> {
     const searchPage = Scaffold(
       body: Column(
         mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
         mainAxisSize: MainAxisSize.max,
         children: <Widget>[
           const Text('Search')
@@ -230,14 +235,11 @@ class _MainPageState extends State<MainPage> {
     );
         
     var mainPageLayout = Scaffold(
-      // App Bar
-        // Left Button to settings
-        // Right button to favorites
       appBar: AppBar(
-      leading: settingsButton,
-      title: const Text('SaTrack'),
-      actions: [favoritesButton],
-    ),
+        leading: settingsButton,
+        title: const Text('SaTrack'),
+        actions: [favoritesButton],
+      ),
       body: pages[currentPageIndex],
       bottomNavigationBar: navBar,
       );
@@ -264,6 +266,8 @@ class _SettingsPageState extends State<SettingsPage> {
     // - notifications
     // - calibration
   final _textFieldController = TextEditingController();
+  final _editingController = TextEditingController();
+
   final List<String> titles = ["Common", "Email"]; 
   List<String> searchItems = [];
   
@@ -338,19 +342,21 @@ class _SettingsPageState extends State<SettingsPage> {
         context: context,
         builder: (context) {
           return dialogBox;
-        });
+        }
+      );
   }
   @override
   Widget build(BuildContext context){
 
     var searchBar = TextField(
-      controller: _textFieldController,
+      controller: _editingController,
       decoration: const InputDecoration(
+        floatingLabelBehavior: FloatingLabelBehavior.never,
         labelText: "Search",
         hintText: "Search Settings",
         prefixIcon: Icon(Icons.search),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.all(Radius.circular(25.0)
+          borderRadius: BorderRadius.all(Radius.circular(15.0)
           )
         )
       )
@@ -410,6 +416,11 @@ class _SettingsPageState extends State<SettingsPage> {
                   children: [Text("Common")],
                 ),
                 const ListTile(
+                  title: Text("Location"),
+                  leading: Icon(Icons.pin_drop),
+                  subtitle: Text("Here"),
+                ),
+                const ListTile(
                   title: Text("Language"),
                   leading: Icon(Icons.language),
                   subtitle: Text("English"),
@@ -417,6 +428,19 @@ class _SettingsPageState extends State<SettingsPage> {
                 const Divider(),
                 emailTile,
                 darkmodeTile,
+                const Divider(),
+                const Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [Text("Account")],
+                ),
+                const ListTile(
+                  title: Text("Clear History"),
+                  leading: Icon(Icons.delete_forever_sharp),
+                ),
+                const ListTile(
+                  title: Text("Clear Favorites"),
+                  leading: Icon(Icons.delete_forever_sharp),
+                ),
               ],
             ),
           ),
@@ -427,7 +451,10 @@ class _SettingsPageState extends State<SettingsPage> {
             title: const Text("Settings"),
           ),
           body: Column(
-            children: [searchBar, settingsBody]
+            children: [
+              searchBar, 
+              settingsBody
+            ]
           )
         );
       }
