@@ -90,6 +90,13 @@ class MainPage extends StatefulWidget {
 
 
 class _MainPageState extends State<MainPage> {
+  int defaultPageIndex = 2;
+  int currentPageIndex = 2;
+
+  void updatePageIndex(int index) {
+      setState(() {currentPageIndex = index;});
+  }
+  
   @override
   void initState() {
     FlutterNativeSplash.remove();
@@ -125,17 +132,116 @@ class _MainPageState extends State<MainPage> {
         },
       );
 
-    var mainPage = Scaffold(
+    // map 
+    const mapPage = Scaffold(
+      body: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.max,
+        children: <Widget>[
+          const Text('Map')
+        ]
+      ),
+    );
+
+    // news / recent launches
+    const newsPage = Scaffold(
+      body: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.max,
+        children: <Widget>[
+          const Text('News')
+        ]
+      ),
+    );
+    
+    // view
+    const viewPage = Scaffold(
+      body: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.max,
+        children: <Widget>[
+          const Text('View')
+        ]
+      ),
+    );
+
+    // history
+    const historyPage = Scaffold(
+      body: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.max,
+        children: <Widget>[
+          const Text('History')
+        ]
+      ),
+    );
+
+    // search
+    const searchPage = Scaffold(
+      body: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.max,
+        children: <Widget>[
+          const Text('Search')
+        ]
+      ),
+    );
+
+    var pages = <Widget>[
+      mapPage,
+      newsPage,
+      viewPage,
+      historyPage,
+      searchPage,
+    ];
+      
+  const navigationDests = <Widget>[
+    NavigationDestination(
+      selectedIcon: Icon(Icons.map),
+      icon: Icon(Icons.map_outlined),
+      label: 'Map',
+    ),
+    NavigationDestination(
+      selectedIcon: Icon(Icons.newspaper),
+      icon: Icon(Icons.newspaper_outlined),
+      label: 'News',
+    ),
+    NavigationDestination(
+      selectedIcon: Icon(Icons.satellite),
+      icon: Icon(Icons.satellite_outlined),
+      label: 'View',
+    ),
+    NavigationDestination(
+      selectedIcon: Icon(Icons.history),
+      icon: Icon(Icons.history_outlined),
+      label: 'History',
+    ),
+    NavigationDestination(
+      selectedIcon: Icon(Icons.search), 
+      icon: Icon(Icons.search_outlined), 
+      label: 'Search'
+    ),
+  ];
+
+    var navBar = NavigationBar(
+      onDestinationSelected: updatePageIndex,
+      selectedIndex: currentPageIndex,
+      destinations: navigationDests,
+    );
+        
+    var mainPageLayout = Scaffold(
       // App Bar
         // Left Button to settings
         // Right button to favorites
       appBar: AppBar(
-          leading: settingsButton,
-          title: const Text('This is an App'),
-          actions: [favoritesButton],
-        )
+      leading: settingsButton,
+      title: const Text('SaTrack'),
+      actions: [favoritesButton],
+    ),
+      body: pages[currentPageIndex],
+      bottomNavigationBar: navBar,
       );
-    return mainPage;
+    return mainPageLayout;
   }
 }
 
@@ -154,12 +260,24 @@ class _SettingsPageState extends State<SettingsPage> {
     // - change color theme
     // - clear all favorites
     // - reset all settings
+    // - current location
+    // - notifications
+    // - calibration
   final _textFieldController = TextEditingController();
-
+  final List<String> titles = ["Common", "Email"]; 
+  List<String> searchItems = [];
+  
   SharedPreferences? preferences;
   String defaultEmail = 'person@email.com';
   String email = 'person@email.com';
 
+  void filterSearchResults(String query) {
+    setState(() {
+      searchItems = titles
+          .where((item) => item.toLowerCase().contains(query.toLowerCase()))
+          .toList();
+    });
+  }
   Future<void> initStorage() async {
     preferences = await SharedPreferences.getInstance();
     setState(() {
@@ -292,8 +410,8 @@ class _SettingsPageState extends State<SettingsPage> {
                   children: [Text("Common")],
                 ),
                 const ListTile(
-                  leading: Icon(Icons.language),
                   title: Text("Language"),
+                  leading: Icon(Icons.language),
                   subtitle: Text("English"),
                 ),
                 const Divider(),

@@ -12,34 +12,6 @@ import 'package:first_flight/location_page.dart';
 import 'package:first_flight/camera_page.dart';
 import 'package:first_flight/feature_request_page.dart';
 
-// Goals of the app
-// Produce notifications of any Favorites, ISS, or Starlink
-// Support dark mode and light mode
-//
-// Home Page
-// ---------
-// [9/10] Favorites & ISS
-// [] New/Upcoming Launches
-// [] View/Clear History
-// [] Query Page
-// [] Viz/AR Page
-
-// Enter sat name
-//  - Return either similar names for actual query or TLE
-//  - Save either
-// Enter location
-//  - Use GPS
-//  - Manual
-// Enter How far ahead to look
-// Run
-//  Propogate to time
-//  Check when overhead lla
-//  Check is sunlit, night, and cloudless
-//  Return [(start az, el, time, stop az, el, time), ]
-// Access gyroscope and magnetometer
-// Open Camera
-// Display trajectory over camera view
-
 void main() {
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
