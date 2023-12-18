@@ -14,22 +14,15 @@ class SettingsPage extends StatefulWidget {
 class _SettingsState extends State<SettingsPage> {
   late SettModel _model;
 
-  final scaffoldKey = GlobalKey<ScaffoldState>();
-
   @override
   void initState() {
     super.initState();
-    // _model = createModel(context, () => SettModel());
   }
 
   @override
   void dispose() {
     _model.dispose();
     super.dispose();
-  }
-
-  Widget _buildList() {
-    return ListView();
   }
 
   @override
@@ -50,8 +43,6 @@ class _SettingsState extends State<SettingsPage> {
         tileColor: Colors.white,
         activeColor: const Color(0xFF4B39EF),
         activeTrackColor: const Color(0x4C4B39EF),
-        dense: false,
-        controlAffinity: ListTileControlAffinity.trailing,
         contentPadding: const EdgeInsetsDirectional.fromSTEB(24, 12, 24, 12),
       ),
     );
