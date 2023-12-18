@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
-
+import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 // Start Simple, build from there
+
+enum SampleItem { load, favorite, remove }
 
 class MyThemePreferences {
   static const THEME_KEY = "theme_key";
@@ -88,10 +90,22 @@ class MainPage extends StatefulWidget {
   State<MainPage> createState() => _MainPageState();
 }
 
-
 class _MainPageState extends State<MainPage> {
   int defaultPageIndex = 2;
   int currentPageIndex = 2;
+
+  SampleItem? selectedMenu;
+
+  SharedPreferences? preferences;
+  List<String> history = ['First'];
+
+  // init the position using the user location
+  final mapController = MapController.withUserPosition(
+    trackUserLocation: UserTrackingOption(
+      enableTracking: true,
+      unFollowUser: false,
+    )
+  );
 
   void updatePageIndex(int index) {
       setState(() {currentPageIndex = index;});
@@ -104,7 +118,62 @@ class _MainPageState extends State<MainPage> {
   }
 
   @override
+  void dispose() {
+    super.dispose();
+    mapController.dispose();
+  }
+  
+
+  @override
   Widget build(BuildContext context){
+
+    Widget buildHistoryList(){
+      var historyListBuilder = ListView.builder(
+        itemBuilder: (context, itemIdxs) {
+          if (itemIdxs < history.length) {
+            var buttonOptions = [
+              MenuItemButton(
+                onPressed: () =>
+                    setState(() => selectedMenu = SampleItem.values[0]),
+                child: const Text('View'),
+              ),
+              MenuItemButton(
+                onPressed: () => setState(() => selectedMenu = SampleItem.values[1]),
+                child: const Text('Favorite'),
+              ),
+              MenuItemButton(
+                onPressed: () => setState(() => selectedMenu = SampleItem.values[2]),
+                child: const Text('Remove'),
+              ),
+            ];
+
+            var historyTiles = ListTile(
+              title: Text(history[itemIdxs]),
+              trailing: MenuAnchor(
+                menuChildren: buttonOptions,
+                builder:
+                  (BuildContext context, MenuController controller, Widget? child) {
+                    var menuButton = IconButton(
+                      icon: const Icon(Icons.more_vert),
+                      onPressed: () {
+                        if (controller.isOpen) {
+                          controller.close();
+                        } else {
+                          controller.open();
+                        }
+                      },
+                    );
+                  return menuButton;
+                }
+              )
+            );
+            return historyTiles;
+          }
+        },
+      );
+      return historyListBuilder;
+    }
+
     var settingsButton = IconButton(
       icon: const Icon(
         Icons.settings,
@@ -118,8 +187,7 @@ class _MainPageState extends State<MainPage> {
       },
     );
 
-    var favoritesButton = 
-      IconButton(
+    var favoritesButton = IconButton(
         icon: const Icon(
           Icons.star_border,
         ),
@@ -131,15 +199,59 @@ class _MainPageState extends State<MainPage> {
           );
         },
       );
+      
+
+    var OpenMap = OSMFlutter( 
+        controller: mapController,
+        osmOption: OSMOption(
+              userTrackingOption: UserTrackingOption(
+              enableTracking: true,
+              unFollowUser: false,
+            ),
+            zoomOption: ZoomOption(
+                  initZoom: 8,
+                  minZoomLevel: 3,
+                  maxZoomLevel: 19,
+                  stepZoom: 1.0,
+            ),
+            userLocationMarker: UserLocationMaker(
+                personMarker: MarkerIcon(
+                    icon: Icon(
+                        Icons.location_history_rounded,
+                        color: Colors.red,
+                        size: 48,
+                    ),
+                ),
+                directionArrowMarker: MarkerIcon(
+                    icon: Icon(
+                        Icons.double_arrow,
+                        size: 48,
+                    ),
+                ),
+            ),
+            roadConfiguration: RoadOption(
+                    roadColor: Colors.yellowAccent,
+            ),
+            markerOption: MarkerOption(
+                defaultMarker: MarkerIcon(
+                    icon: Icon(
+                      Icons.person_pin_circle,
+                      color: Colors.blue,
+                      size: 56,
+                    ),
+                )
+            ),
+        )
+    );
 
     // map 
-    const mapPage = Scaffold(
+    var mapPage = Scaffold(
       body: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.center,
         mainAxisSize: MainAxisSize.max,
         children: <Widget>[
-          const Text('Map')
+          OpenMap
         ]
       ),
     );
@@ -151,7 +263,7 @@ class _MainPageState extends State<MainPage> {
         crossAxisAlignment: CrossAxisAlignment.center,
         mainAxisSize: MainAxisSize.max,
         children: <Widget>[
-          const Text('News')
+          Text('News')
         ]
       ),
     );
@@ -163,21 +275,14 @@ class _MainPageState extends State<MainPage> {
         crossAxisAlignment: CrossAxisAlignment.center,
         mainAxisSize: MainAxisSize.max,
         children: <Widget>[
-          const Text('View')
+          Text('View')
         ]
       ),
     );
 
     // history
-    const historyPage = Scaffold(
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        mainAxisSize: MainAxisSize.max,
-        children: <Widget>[
-          const Text('History')
-        ]
-      ),
+    var historyPage = Scaffold(
+      body: buildHistoryList()
     );
 
     // search
@@ -187,7 +292,8 @@ class _MainPageState extends State<MainPage> {
         crossAxisAlignment: CrossAxisAlignment.center,
         mainAxisSize: MainAxisSize.max,
         children: <Widget>[
-          const Text('Search')
+          // Every entry appended to the history list
+          Text('Search')
         ]
       ),
     );
@@ -200,33 +306,33 @@ class _MainPageState extends State<MainPage> {
       searchPage,
     ];
       
-  const navigationDests = <Widget>[
-    NavigationDestination(
-      selectedIcon: Icon(Icons.map),
-      icon: Icon(Icons.map_outlined),
-      label: 'Map',
-    ),
-    NavigationDestination(
-      selectedIcon: Icon(Icons.newspaper),
-      icon: Icon(Icons.newspaper_outlined),
-      label: 'News',
-    ),
-    NavigationDestination(
-      selectedIcon: Icon(Icons.satellite),
-      icon: Icon(Icons.satellite_outlined),
-      label: 'View',
-    ),
-    NavigationDestination(
-      selectedIcon: Icon(Icons.history),
-      icon: Icon(Icons.history_outlined),
-      label: 'History',
-    ),
-    NavigationDestination(
-      selectedIcon: Icon(Icons.search), 
-      icon: Icon(Icons.search_outlined), 
-      label: 'Search'
-    ),
-  ];
+    const navigationDests = <Widget>[
+      NavigationDestination(
+        selectedIcon: Icon(Icons.map),
+        icon: Icon(Icons.map_outlined),
+        label: 'Map',
+      ),
+      NavigationDestination(
+        selectedIcon: Icon(Icons.newspaper),
+        icon: Icon(Icons.newspaper_outlined),
+        label: 'News',
+      ),
+      NavigationDestination(
+        selectedIcon: Icon(Icons.satellite),
+        icon: Icon(Icons.satellite_outlined),
+        label: 'View',
+      ),
+      NavigationDestination(
+        selectedIcon: Icon(Icons.history),
+        icon: Icon(Icons.history_outlined),
+        label: 'History',
+      ),
+      NavigationDestination(
+        selectedIcon: Icon(Icons.search), 
+        icon: Icon(Icons.search_outlined), 
+        label: 'Search'
+      ),
+    ];
 
     var navBar = NavigationBar(
       onDestinationSelected: updatePageIndex,
