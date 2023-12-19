@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
-import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
+// import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 // Start Simple, build from there
@@ -100,12 +100,12 @@ class _MainPageState extends State<MainPage> {
   List<String> history = ['First'];
 
   // init the position using the user location
-  final mapController = MapController.withUserPosition(
-    trackUserLocation: UserTrackingOption(
-      enableTracking: true,
-      unFollowUser: false,
-    )
-  );
+  // final mapController = MapController.withUserPosition(
+  //   trackUserLocation: UserTrackingOption(
+  //     enableTracking: true,
+  //     unFollowUser: false,
+  //   )
+  // );
 
   void updatePageIndex(int index) {
       setState(() {currentPageIndex = index;});
@@ -117,11 +117,11 @@ class _MainPageState extends State<MainPage> {
     super.initState();
   }
 
-  @override
-  void dispose() {
-    super.dispose();
-    mapController.dispose();
-  }
+  // @override
+  // void dispose() {
+  //   super.dispose();
+  //   mapController.dispose();
+  // }
   
 
   @override
@@ -201,57 +201,57 @@ class _MainPageState extends State<MainPage> {
       );
       
 
-    var OpenMap = OSMFlutter( 
-        controller: mapController,
-        osmOption: OSMOption(
-              userTrackingOption: UserTrackingOption(
-              enableTracking: true,
-              unFollowUser: false,
-            ),
-            zoomOption: ZoomOption(
-                  initZoom: 8,
-                  minZoomLevel: 3,
-                  maxZoomLevel: 19,
-                  stepZoom: 1.0,
-            ),
-            userLocationMarker: UserLocationMaker(
-                personMarker: MarkerIcon(
-                    icon: Icon(
-                        Icons.location_history_rounded,
-                        color: Colors.red,
-                        size: 48,
-                    ),
-                ),
-                directionArrowMarker: MarkerIcon(
-                    icon: Icon(
-                        Icons.double_arrow,
-                        size: 48,
-                    ),
-                ),
-            ),
-            roadConfiguration: RoadOption(
-                    roadColor: Colors.yellowAccent,
-            ),
-            markerOption: MarkerOption(
-                defaultMarker: MarkerIcon(
-                    icon: Icon(
-                      Icons.person_pin_circle,
-                      color: Colors.blue,
-                      size: 56,
-                    ),
-                )
-            ),
-        )
-    );
+    // var OpenMap = OSMFlutter( 
+    //     controller: mapController,
+    //     osmOption: OSMOption(
+    //           userTrackingOption: UserTrackingOption(
+    //           enableTracking: true,
+    //           unFollowUser: false,
+    //         ),
+    //         zoomOption: ZoomOption(
+    //               initZoom: 8,
+    //               minZoomLevel: 3,
+    //               maxZoomLevel: 19,
+    //               stepZoom: 1.0,
+    //         ),
+    //         userLocationMarker: UserLocationMaker(
+    //             personMarker: MarkerIcon(
+    //                 icon: Icon(
+    //                     Icons.location_history_rounded,
+    //                     color: Colors.red,
+    //                     size: 48,
+    //                 ),
+    //             ),
+    //             directionArrowMarker: MarkerIcon(
+    //                 icon: Icon(
+    //                     Icons.double_arrow,
+    //                     size: 48,
+    //                 ),
+    //             ),
+    //         ),
+    //         roadConfiguration: RoadOption(
+    //                 roadColor: Colors.yellowAccent,
+    //         ),
+    //         markerOption: MarkerOption(
+    //             defaultMarker: MarkerIcon(
+    //                 icon: Icon(
+    //                   Icons.person_pin_circle,
+    //                   color: Colors.blue,
+    //                   size: 56,
+    //                 ),
+    //             )
+    //         ),
+    //     )
+    // );
 
     // map 
-    var mapPage = Scaffold(
+    const mapPage = Scaffold(
       body: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.center,
         mainAxisSize: MainAxisSize.max,
         children: <Widget>[
-          OpenMap
+          Text('Map Page')
         ]
       ),
     );
@@ -285,15 +285,27 @@ class _MainPageState extends State<MainPage> {
       body: buildHistoryList()
     );
 
+    final _editingController = TextEditingController();
+
+    var searchBar = TextField(
+      controller: _editingController,
+      decoration: const InputDecoration(
+        floatingLabelBehavior: FloatingLabelBehavior.never,
+        labelText: "Search",
+        hintText: "Search Orbits",
+        prefixIcon: Icon(Icons.search),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.all(Radius.circular(15.0)
+          )
+        )
+      )
+    );
+
     // search
-    const searchPage = Scaffold(
+    var searchPage = Scaffold(
       body: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        mainAxisSize: MainAxisSize.max,
-        children: <Widget>[
-          // Every entry appended to the history list
-          Text('Search')
+        children: [
+          searchBar
         ]
       ),
     );
