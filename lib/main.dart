@@ -634,12 +634,12 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
                 const ListTile(
                   title: Text("Location"),
-                  trailing: Icon(Icons.pin_drop),
+                  leading: Icon(Icons.pin_drop),
                   subtitle: Text("Here"),
                 ),
                 const ListTile(
                   title: Text("Notifications"),
-                  trailing: Icon(Icons.notifications),
+                  leading: Icon(Icons.notifications),
                   subtitle: Text("Get notified on upcoming passes"),
                 ),
                 const ListTile(
