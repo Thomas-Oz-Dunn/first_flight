@@ -745,7 +745,6 @@ class _FavoritesPageState extends State<FavoritesPage> {
 
   final TextEditingController _searchController = TextEditingController();
   final _newFavoriteFieldController = TextEditingController();
-  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final ScrollController _scrollController = ScrollController();
   
 
@@ -841,33 +840,28 @@ class _FavoritesPageState extends State<FavoritesPage> {
 
   @override
   Widget build(BuildContext context) {
-    
+
+    // TODO-TD: hide search bar unless scrolled up?
     var searchableFavesList = Scaffold(
-      key: _scaffoldKey,
       appBar: AppBar(
         title: Container(
           height: 40,
-          decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(5)),
+          decoration: BoxDecoration(borderRadius: BorderRadius.circular(5)),
           child: TextField(
             controller: _searchController,
             decoration: InputDecoration(
               prefixIcon: IconButton(
-                icon: const Icon(
-                  Icons.search_rounded,
-                ),
+                icon: const Icon(Icons.search_rounded),
                 onPressed: () => FocusScope.of(context).unfocus(),
               ),
+              hintText: 'Filter Favorites',
               suffixIcon: IconButton(
-                icon: const Icon(
-                  Icons.clear_rounded,
-                ),
+                icon: const Icon(Icons.clear_rounded),
                 onPressed: () {
                   _searchController.text = "";
                   _filterListBySearchText("");
                 }
               ),
-              hintText: 'Search...',
             ),
             onChanged: (value) => _filterListBySearchText(value),
             onSubmitted: (value) => _filterListBySearchText(value),
@@ -883,15 +877,13 @@ class _FavoritesPageState extends State<FavoritesPage> {
           itemBuilder: (context, itemIdxs) {
             if (itemIdxs < _filteredFavoritesList.length) {
               var favoriteTiles = ListTile(
-                  title: Text(_filteredFavoritesList[itemIdxs]),
-                  trailing: IconButton(
-                    icon: const Icon(
-                      Icons.delete,
-                    ),
-                    onPressed: () async {
-                      _removeFavorite(_filteredFavoritesList[itemIdxs]);
-                    },
-                  )
+                title: Text(_filteredFavoritesList[itemIdxs]),
+                trailing: IconButton(
+                  icon: const Icon(Icons.delete),
+                  onPressed: () async {
+                    _removeFavorite(_filteredFavoritesList[itemIdxs]);
+                  },
+                )
               );
               return favoriteTiles;
             }
@@ -901,131 +893,30 @@ class _FavoritesPageState extends State<FavoritesPage> {
       
     var addFavButtonAppBar = <Widget>[
       IconButton(
-          icon: const Icon(
-            Icons.star,
-          ),
-          onPressed: () async {
-            var resultLabel = await _showTextInputDialog(context);
-            if (resultLabel != null) {
-              setState(() {
-                _addFavorite(resultLabel);
-              });
-            }
+        icon: const Icon(
+          Icons.star,
+        ),
+        onPressed: () async {
+          var resultLabel = await _showTextInputDialog(context);
+          if (resultLabel != null) {
+            setState(() {
+              _addFavorite(resultLabel);
+              _searchController.text = resultLabel;
+              _filterListBySearchText(resultLabel);
+            });
           }
-        )
-      ];
+        }
+      )
+    ];
 
     var pageLayout = Scaffold(
-        appBar: AppBar(
-            title: const Text('Favorites'),
-            actions: addFavButtonAppBar
-          ),
-        body: searchableFavesList
-      );
+      appBar: AppBar(
+          title: const Text('Favorites'),
+          actions: addFavButtonAppBar,
+        ),
+      body: searchableFavesList
+    );
 
     return pageLayout;
-  }
-}
-
-
-class SearchPage extends StatefulWidget {
-  const SearchPage({Key? key}) : super(key: key);
-
-  @override
-  _SearchPageState createState() => _SearchPageState();
-}
-
-class _SearchPageState extends State<SearchPage> {
-  SharedPreferences? preferences;
-
-  final TextEditingController _textController = TextEditingController();
-  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-  final ScrollController _scrollController = ScrollController();
-  
-  List<String> _allFavoritesList = [];
-  List<String> _filteredFavoritesList = [];
-
-  Future<void> initStorage() async {
-    preferences = await SharedPreferences.getInstance();
-    setState(() {});
-  }
-
-  void loadFavorites() {
-    List<String>? savedData = preferences?.getStringList('Favorites');
-
-    if (savedData != null) {
-      _allFavoritesList = savedData;
-      _filteredFavoritesList = _allFavoritesList;
-    }
-    setState(() {});
-  }
-
-  @override
-  void initState() {
-    initStorage();
-    loadFavorites();
-    super.initState();
-  }
-
-  @override
-  void dispose() {
-    _textController.dispose();
-    super.dispose();
-  }
-
-  void _filterListBySearchText(String searchText) {
-    setState(() {
-      _filteredFavoritesList = _allFavoritesList
-          .where((faveObj) =>
-              faveObj.toLowerCase().contains(searchText.toLowerCase()))
-          .toList();
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      key: _scaffoldKey,
-      appBar: AppBar(
-        title: Container(
-          height: 40,
-          decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(5)),
-          child: TextField(
-            controller: _textController,
-            decoration: InputDecoration(
-              prefixIcon: IconButton(
-                icon: const Icon(
-                  Icons.search_rounded,
-                ),
-                onPressed: () => FocusScope.of(context).unfocus(),
-              ),
-              suffixIcon: IconButton(
-                icon: const Icon(
-                  Icons.clear_rounded,
-                ),
-                onPressed: () {
-                  _textController.text = "";
-                  _filterListBySearchText("");
-                }),
-              hintText: 'Search...',
-            ),
-            onChanged: (value) => _filterListBySearchText(value),
-            onSubmitted: (value) => _filterListBySearchText(value),
-          ),
-        ),
-      ),
-      body: ListView.builder(
-        physics: const AlwaysScrollableScrollPhysics(),
-        controller: _scrollController,
-        itemCount: _filteredFavoritesList.length,
-        shrinkWrap: true,
-        padding: const EdgeInsets.only(bottom: 10),
-        itemBuilder: (BuildContext context, int index) {
-
-          // I omit the part to build card items from the list
-        },
-      ),
-    );
   }
 }
