@@ -97,7 +97,8 @@ class _MainPageState extends State<MainPage> {
   SampleItem? selectedMenu;
 
   SharedPreferences? preferences;
-  List<String> history = ['First'];
+  List<String> history = ['First History'];
+  List<String> favorites = ['First Favorite'];
 
   // init the position using the user location
   // final mapController = MapController.withUserPosition(
@@ -122,7 +123,35 @@ class _MainPageState extends State<MainPage> {
   //   super.dispose();
   //   mapController.dispose();
   // }
-  
+
+  Future<void> initStorage() async {
+    preferences = await SharedPreferences.getInstance();
+    setState(() {});
+  }
+
+  void _addFavorite(name) {
+    favorites.add(name);
+    preferences?.setStringList("Favorites", favorites);
+    setState(() {});
+  }
+
+  void _loadHistory() {
+    List<String>? savedData = preferences?.getStringList('History');
+
+    if (savedData == null) {
+      preferences?.setStringList("History", history);
+    } else {
+      favorites = savedData;
+    }
+
+    setState(() {});
+  }
+
+  void _removeHistory(name) {
+    history.remove(name);
+    preferences?.setStringList("History", history);
+    setState(() {});
+  }
 
   @override
   Widget build(BuildContext context){
@@ -134,15 +163,25 @@ class _MainPageState extends State<MainPage> {
             var buttonOptions = [
               MenuItemButton(
                 onPressed: () =>
-                    setState(() => selectedMenu = SampleItem.values[0]),
+                    setState(() {
+                      selectedMenu = SampleItem.values[0];
+                    }),
                 child: const Text('View'),
               ),
               MenuItemButton(
-                onPressed: () => setState(() => selectedMenu = SampleItem.values[1]),
+                onPressed: () => 
+                  setState(() {
+                    selectedMenu = SampleItem.values[1];
+                    _addFavorite(history[itemIdxs]);
+                  }),
                 child: const Text('Favorite'),
               ),
               MenuItemButton(
-                onPressed: () => setState(() => selectedMenu = SampleItem.values[2]),
+                onPressed: () => 
+                  setState(() {
+                    selectedMenu = SampleItem.values[2];
+                    _removeHistory(history[itemIdxs]);
+                  }),
                 child: const Text('Remove'),
               ),
             ];
@@ -285,21 +324,37 @@ class _MainPageState extends State<MainPage> {
       body: buildHistoryList()
     );
 
-    final _editingController = TextEditingController();
-
-    var searchBar = TextField(
-      controller: _editingController,
-      decoration: const InputDecoration(
-        floatingLabelBehavior: FloatingLabelBehavior.never,
-        labelText: "Search",
-        hintText: "Search Orbits",
-        prefixIcon: Icon(Icons.search),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.all(Radius.circular(15.0)
-          )
-        )
-      )
-    );
+    var searchBar = SearchAnchor(
+      builder: (BuildContext context, SearchController controller) {
+        return SearchBar(
+          controller: controller,
+          padding: const MaterialStatePropertyAll<EdgeInsets>(
+              EdgeInsets.symmetric(horizontal: 16.0)),
+          onTap: () {
+            controller.openView();
+          },
+          onChanged: (_) {
+            controller.openView();
+          },
+          leading: const Icon(Icons.search),
+        );
+      }, suggestionsBuilder:
+        (BuildContext context, SearchController controller) {
+          // TODO-TD: Update Search results here
+          return List<ListTile>.generate(5, (int index) {
+            final String item = 'item $index';
+            return ListTile(
+              title: Text(item),
+              onTap: () {
+                setState(() {
+                  controller.closeView(item);
+                  // TODO-TD: Open metadata page, append to history
+                });
+              },
+            );
+          });
+        }
+      );
 
     // search
     var searchPage = Scaffold(
@@ -317,39 +372,37 @@ class _MainPageState extends State<MainPage> {
       historyPage,
       searchPage,
     ];
-      
-    const navigationDests = <Widget>[
-      NavigationDestination(
-        selectedIcon: Icon(Icons.map),
-        icon: Icon(Icons.map_outlined),
-        label: 'Map',
-      ),
-      NavigationDestination(
-        selectedIcon: Icon(Icons.newspaper),
-        icon: Icon(Icons.newspaper_outlined),
-        label: 'News',
-      ),
-      NavigationDestination(
-        selectedIcon: Icon(Icons.satellite),
-        icon: Icon(Icons.satellite_outlined),
-        label: 'View',
-      ),
-      NavigationDestination(
-        selectedIcon: Icon(Icons.history),
-        icon: Icon(Icons.history_outlined),
-        label: 'History',
-      ),
-      NavigationDestination(
-        selectedIcon: Icon(Icons.search), 
-        icon: Icon(Icons.search_outlined), 
-        label: 'Search'
-      ),
-    ];
 
     var navBar = NavigationBar(
       onDestinationSelected: updatePageIndex,
       selectedIndex: currentPageIndex,
-      destinations: navigationDests,
+      destinations: const <Widget>[
+        NavigationDestination(
+          selectedIcon: Icon(Icons.map),
+          icon: Icon(Icons.map_outlined),
+          label: 'Map',
+        ),
+        NavigationDestination(
+          selectedIcon: Icon(Icons.newspaper),
+          icon: Icon(Icons.newspaper_outlined),
+          label: 'News',
+        ),
+        NavigationDestination(
+          selectedIcon: Icon(Icons.satellite),
+          icon: Icon(Icons.satellite_outlined),
+          label: 'View',
+        ),
+        NavigationDestination(
+          selectedIcon: Icon(Icons.history),
+          icon: Icon(Icons.history_outlined),
+          label: 'History',
+        ),
+        NavigationDestination(
+          selectedIcon: Icon(Icons.search), 
+          icon: Icon(Icons.search_outlined), 
+          label: 'Search'
+        ),
+      ],
     );
         
     var mainPageLayout = Scaffold(
@@ -360,7 +413,7 @@ class _MainPageState extends State<MainPage> {
       ),
       body: pages[currentPageIndex],
       bottomNavigationBar: navBar,
-      );
+    );
     return mainPageLayout;
   }
 }
@@ -376,22 +429,42 @@ class SettingsPage extends StatefulWidget {
 
 class _SettingsPageState extends State<SettingsPage> {
     // Search bar
-    // scroll
-    // - change color theme
+    // - Display only the search results
+
     // - clear all favorites
     // - reset all settings
-    // - current location
-    // - notifications
-    // - calibration
+    // - control location services
+    // - enable disable notifications
+    // - sensro calibration
+
   final _textFieldController = TextEditingController();
   final _editingController = TextEditingController();
 
-  final List<String> titles = ["Common", "Email"]; 
+  final List<String> titles = ["Email", "Language"];
+
   List<String> searchItems = [];
   
   SharedPreferences? preferences;
   String defaultEmail = 'person@email.com';
   String email = 'person@email.com';
+  
+  void _clearMemory(String name){
+
+    List<String>? savedData = preferences?.getStringList(name);
+
+    if (savedData == null) {
+      setState(() {});
+
+    } else {
+
+      for (final saved in savedData) {
+        savedData.remove(saved);
+      }
+      preferences?.setStringList(name, savedData);
+      setState(() {});
+
+    }
+  }
 
   void filterSearchResults(String query) {
     setState(() {
@@ -504,6 +577,32 @@ class _SettingsPageState extends State<SettingsPage> {
       }
     );
 
+    var clearHistoryTile = ListTile(
+      title: const Text("Clear History"),
+      subtitle: const Text("Clear all search history"),
+      trailing: IconButton(
+        icon: const Icon(
+          Icons.delete_forever_sharp,
+        ),
+        onPressed: () async {
+          _clearMemory("History");
+        },
+      )
+    );
+
+    var clearFavoritesTile = ListTile(
+      title: const Text("Clear Favorites"),
+      subtitle: const Text("Clear all favorites"),
+      trailing: IconButton(
+        icon: const Icon(
+          Icons.delete_forever_sharp,
+        ),
+        onPressed: () async {
+          _clearMemory("Favorites");
+        },
+      )
+    );
+
     var themeConsumer = Consumer<ModelThemeProvider>(
       builder: (context, ModelThemeProvider themeNotifier, child) {
 
@@ -535,8 +634,13 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
                 const ListTile(
                   title: Text("Location"),
-                  leading: Icon(Icons.pin_drop),
+                  trailing: Icon(Icons.pin_drop),
                   subtitle: Text("Here"),
+                ),
+                const ListTile(
+                  title: Text("Notifications"),
+                  trailing: Icon(Icons.notifications),
+                  subtitle: Text("Get notified on upcoming passes"),
                 ),
                 const ListTile(
                   title: Text("Language"),
@@ -551,14 +655,8 @@ class _SettingsPageState extends State<SettingsPage> {
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [Text("Account")],
                 ),
-                const ListTile(
-                  title: Text("Clear History"),
-                  leading: Icon(Icons.delete_forever_sharp),
-                ),
-                const ListTile(
-                  title: Text("Clear Favorites"),
-                  leading: Icon(Icons.delete_forever_sharp),
-                ),
+                clearHistoryTile,
+                clearFavoritesTile
               ],
             ),
           ),
@@ -603,6 +701,7 @@ class FavoritesPage extends StatefulWidget {
   @override
   State<FavoritesPage> createState() => _FavoritesPageState();
 }
+
 class _FavoritesPageState extends State<FavoritesPage> {
   SharedPreferences? preferences;
   List<String> favorites = ['First'];
