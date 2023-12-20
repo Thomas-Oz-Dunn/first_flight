@@ -11,48 +11,50 @@ import 'theme_handle.dart';
 import 'settings_page.dart';
 
 
-// TODO-TD: create custom data type for loading/saving
-
 enum SampleItem { load, favorite, remove, share }
-class Album {
-  final int userId;
-  final int id;
-  final String title;
-  final String body;
 
-  const Album({
-    required this.userId,
-    required this.id,
-    required this.title,
-    required this.body,
+
+class Pass{}
+
+class Orbit {
+  final String objectName;
+  final String objectID;
+
+  const Orbit({
+    required this.objectName,
+    required this.objectID,
   });
 
-  factory Album.fromJson(Map<String, dynamic> json) {
+  factory Orbit.fromJson(dynamic json) {
     return switch (json) {
       {
-        'userId': int userId,
-        'id': int id,
-        'title': String title,
-        'body': String body,
+        'OBJECT_NAME': String objectName,
+        'OBJECT_ID': String objectID
       } =>
-        Album(
-          userId: userId,
-          id: id,
-          title: title,
-          body: body,
+        Orbit(
+          objectName: objectName,
+          objectID: objectID
         ),
-      _ => throw const FormatException('Failed to load album.'),
+      _ => throw const FormatException('Failed to load Orbit.'),
     };
   }
 }
 
-Future<Album> fetchAlbum(String url) async  {
+Future<List<Orbit>> fetchOrbits(String url) async  {
   final response = await http.get(Uri.parse(url));
       
   if (response.statusCode == 200) {
-    return Album.fromJson(jsonDecode(response.body) as Map<String, dynamic>);
+    List<dynamic> body = jsonDecode(response.body) as List<dynamic>;
+
+    List<Orbit> orbits = [];
+
+    for(final bod in body){
+      orbits.add(Orbit.fromJson(bod));
+    }
+    return orbits;
+
   } else {
-    throw Exception('Failed to load album');
+    throw Exception('Failed to load orbits');
   }
 }
 
@@ -103,11 +105,15 @@ class MainPage extends StatefulWidget {
 
 class _MainPageState extends State<MainPage> {
   String placeholder = 'https://jsonplaceholder.typicode.com/albums/1';
-  late Future<Album> futureAlbum;
+  late Future<List<Orbit>> futureOrbits;
 
   String spaceFlightNews = "http://api.spaceflightnewsapi.net/v4/articles/";
 
-  String celestrakPreScript = "https://celestrak.org/NORAD/elements/gp.php?NAME=";
+  String celestrakPreScript = "https://celestrak.org/NORAD/elements/gp.php?";
+
+  String celestrakName = "NAME=";
+  String celestrakRecent = "GROUP=last-30-days";
+
   String celestrakPostScript = "&FORMAT=JSON";
   final TextEditingController _searchController = TextEditingController();
 
@@ -136,7 +142,7 @@ class _MainPageState extends State<MainPage> {
   void initState() {
     FlutterNativeSplash.remove();
     initStorage();
-    futureAlbum = fetchAlbum(placeholder);
+    futureOrbits = fetchOrbits(celestrakPreScript + celestrakRecent + celestrakPostScript);
     super.initState();
   }
 
@@ -344,25 +350,27 @@ class _MainPageState extends State<MainPage> {
       body: buildHistoryList()
     );
 
-    Future<Album> queryCelestrak(String name){
-      String query = celestrakPreScript + name + celestrakPostScript;
-      futureAlbum = fetchAlbum(query);
-      return futureAlbum;
+    Future<List<Orbit>> queryCelestrak(String name){
+      futureOrbits = fetchOrbits(celestrakPreScript + celestrakName + name + celestrakPostScript);
+      return futureOrbits;
     }
 
-    var searchResultsBuilder = FutureBuilder<Album>(
-      future: futureAlbum,
+    var searchResultsBuilder = FutureBuilder<List<Orbit>>(
+      future: futureOrbits,
       builder: (context, snapshot) {
         if (snapshot.hasData) {
-          Album album = snapshot.data!;
+          List<Orbit> orbits = snapshot.data!;
+          List<Widget> orbitTiles = [];
+          for (final orb in orbits) {
+            orbitTiles.add(
+              Text(orb.objectName)
+            );
+          }
+
           return Column(
-            children: [
-              Text('${album.userId}'),
-              Text('${album.id}'),
-              Text(album.title),
-              Text(album.body)
-            ]
+            children: orbitTiles
           );
+
         } else if (snapshot.hasError) {
           return Text('${snapshot.error}');
         }
