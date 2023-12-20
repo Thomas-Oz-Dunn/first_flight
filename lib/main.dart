@@ -3,11 +3,12 @@ import 'package:provider/provider.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 // import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 // TODO-TD: create custom data type for loading/saving
 
-enum SampleItem { load, favorite, remove }
+enum SampleItem { load, favorite, remove, share }
 
 class MyThemePreferences {
   static const THEME_KEY = "theme_key";
@@ -20,6 +21,53 @@ class MyThemePreferences {
   getTheme() async {
     SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
     return sharedPreferences.getBool(THEME_KEY) ?? false;
+  }
+}
+
+class Album {
+  final int userId;
+  final int id;
+  final String title;
+  final String body;
+
+  const Album({
+    required this.userId,
+    required this.id,
+    required this.title,
+    required this.body,
+  });
+
+  factory Album.fromJson(Map<String, dynamic> json) {
+    return switch (json) {
+      {
+        'userId': int userId,
+        'id': int id,
+        'title': String title,
+        'body': String body,
+      } =>
+        Album(
+          userId: userId,
+          id: id,
+          title: title,
+          body: body,
+        ),
+      _ => throw const FormatException('Failed to load album.'),
+    };
+  }
+}
+
+Future<Album> fetchAlbum(String url) async  {
+  final response = await http
+      .get(Uri.parse(url));
+      
+  if (response.statusCode == 200) {
+    // If the server did return a 200 OK response,
+    // then parse the JSON.
+    return Album.fromJson(jsonDecode(response.body) as Map<String, dynamic>);
+  } else {
+    // If the server did not return a 200 OK response,
+    // then throw an exception.
+    throw Exception('Failed to load album');
   }
 }
 
@@ -92,6 +140,9 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPageState extends State<MainPage> {
+  String placeholder = 'https://jsonplaceholder.typicode.com/albums/1';
+  late Future<Album> futureAlbum;
+
   String spaceFlightNews = "http://api.spaceflightnewsapi.net/v4/articles/";
 
   String celestrakPreScript = "https://celestrak.org/NORAD/elements/gp.php?NAME=";
@@ -115,15 +166,15 @@ class _MainPageState extends State<MainPage> {
   //     unFollowUser: false,
   //   )
   // );
-
   void updatePageIndex(int index) {
-      setState(() {currentPageIndex = index;});
+    setState(() {currentPageIndex = index;});
   }
   
   @override
   void initState() {
     FlutterNativeSplash.remove();
     initStorage();
+    futureAlbum = fetchAlbum(placeholder);
     super.initState();
   }
 
@@ -172,10 +223,35 @@ class _MainPageState extends State<MainPage> {
   @override
   Widget build(BuildContext context){
 
+    var settingsButton = IconButton(
+      icon: const Icon(
+        Icons.settings,
+      ),
+      onPressed: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (context) => const SettingsPage()),
+        );
+      },
+    );
+
+    var favoritesButton = IconButton(
+        icon: const Icon(
+          Icons.star_border,
+        ),
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) => const FavoritesPage()),
+          );
+        },
+      );
+      
     Widget buildHistoryList(){
       _loadHistory();
       // Add search bar to filter history list
-
       var historyListBuilder = ListView.builder(
         itemBuilder: (context, itemIdxs) {
           if (itemIdxs < history.length) {
@@ -237,32 +313,6 @@ class _MainPageState extends State<MainPage> {
       return historyListBuilder;
     }
 
-    var settingsButton = IconButton(
-      icon: const Icon(
-        Icons.settings,
-      ),
-      onPressed: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-              builder: (context) => const SettingsPage()),
-        );
-      },
-    );
-
-    var favoritesButton = IconButton(
-        icon: const Icon(
-          Icons.star_border,
-        ),
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-                builder: (context) => const FavoritesPage()),
-          );
-        },
-      );
-      
     // var OpenMap = OSMFlutter( 
     //     controller: mapController,
     //     osmOption: OSMOption(
@@ -309,14 +359,7 @@ class _MainPageState extends State<MainPage> {
     // map 
     // TODO-TD: Open street map of location and overpasses of favorites or view
     const mapPage = Scaffold(
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        mainAxisSize: MainAxisSize.max,
-        children: <Widget>[
-          Text('Map Page')
-        ]
-      ),
+      body: Center( child: Text('Map Page')),
     );
 
     // news / recent launches
@@ -325,27 +368,13 @@ class _MainPageState extends State<MainPage> {
     // Related launches
 
     const newsPage = Scaffold(
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        mainAxisSize: MainAxisSize.max,
-        children: <Widget>[
-          Text('News')
-        ]
-      ),
+      body: Center(child: Text('News')),
     );
     
     // view
     // TODO-TD: Interface with gyroscope for celestial sphere
     const viewPage = Scaffold(
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        mainAxisSize: MainAxisSize.max,
-        children: <Widget>[
-          Text('View')
-        ]
-      ),
+      body: Center(child: Text('View')),
     );
 
     // history
@@ -353,15 +382,34 @@ class _MainPageState extends State<MainPage> {
       body: buildHistoryList()
     );
 
-    void _queryCelestrak(String name){
-
+    Future<Album> queryCelestrak(String name){
       String query = celestrakPreScript + name + celestrakPostScript;
-
-      // Format what we receive
+      futureAlbum = fetchAlbum(query);
+      return futureAlbum;
     }
 
+    var searchResultsBuilder = FutureBuilder<Album>(
+      future: futureAlbum,
+      builder: (context, snapshot) {
+        if (snapshot.hasData) {
+          Album album = snapshot.data!;
+          return Column(
+            children: [
+              Text('${album.userId}'),
+              Text('${album.id}'),
+              Text(album.title),
+              Text(album.body)
+            ]
+          );
+        } else if (snapshot.hasError) {
+          return Text('${snapshot.error}');
+        }
+        return const CircularProgressIndicator();
+      },
+    );
+
     // search
-    var searchPage = Container(
+    var searchBar = Container(
       height: 40,
       decoration: BoxDecoration(borderRadius: BorderRadius.circular(5)),
       child: TextField(
@@ -371,19 +419,24 @@ class _MainPageState extends State<MainPage> {
             icon: const Icon(Icons.search_rounded),
             onPressed: () => FocusScope.of(context).unfocus(),
           ),
-          hintText: 'Filter Favorites',
+          hintText: 'Search Orbits',
           suffixIcon: IconButton(
             icon: const Icon(Icons.clear_rounded),
-            onPressed: () {
-              _searchController.text = "";
-              _queryCelestrak("");
-            }
+            onPressed: () {_searchController.text = "";}
           ),
         ),
-          onChanged: (value) => _queryCelestrak(value),
-          onSubmitted: (value) => _queryCelestrak(value),
-          ),
-        );
+        // onChanged: (value) => _queryCelestrak(value),
+        onSubmitted: (value) => queryCelestrak(value),
+        ),
+      );
+
+    var searchPage = Scaffold(
+      appBar: AppBar(
+        leading: null,
+        title: searchBar,
+      ),
+      body: Center(child: searchResultsBuilder),
+    );
 
     var pages = <Widget>[
       mapPage,
@@ -819,55 +872,56 @@ class _FavoritesPageState extends State<FavoritesPage> {
   Widget build(BuildContext context) {
 
     // TODO-TD: hide search bar unless scrolled up?
-    var searchableFavesList = Scaffold(
-      appBar: AppBar(
-        title: Container(
-          height: 40,
-          decoration: BoxDecoration(borderRadius: BorderRadius.circular(5)),
-          child: TextField(
-            controller: _searchController,
-            decoration: InputDecoration(
-              prefixIcon: IconButton(
-                icon: const Icon(Icons.search_rounded),
-                onPressed: () => FocusScope.of(context).unfocus(),
-              ),
-              hintText: 'Filter Favorites',
-              suffixIcon: IconButton(
-                icon: const Icon(Icons.clear_rounded),
-                onPressed: () {
-                  _searchController.text = "";
-                  _filterListBySearchText("");
-                }
-              ),
+    var favoritesSearchBar = AppBar(
+      leading: null,
+      title: Container(
+        height: 40,
+        decoration: BoxDecoration(borderRadius: BorderRadius.circular(5)),
+        child: TextField(
+          controller: _searchController,
+          decoration: InputDecoration(
+            prefixIcon: IconButton(
+              icon: const Icon(Icons.search_rounded),
+              onPressed: () => FocusScope.of(context).unfocus(),
             ),
-            onChanged: (value) => _filterListBySearchText(value),
-            onSubmitted: (value) => _filterListBySearchText(value),
+            hintText: 'Search Favorites',
+            suffixIcon: IconButton(
+              icon: const Icon(Icons.clear_rounded),
+              onPressed: () {
+                _searchController.text = "";
+                _filterListBySearchText("");
+              }
             ),
           ),
-        ),
-        body: ListView.builder(
-          physics: const AlwaysScrollableScrollPhysics(),
-          controller: _scrollController,
-          itemCount: _filteredFavoritesList.length,
-          shrinkWrap: true,
-          padding: const EdgeInsets.only(bottom: 10),
-          itemBuilder: (context, itemIdxs) {
-            if (itemIdxs < _filteredFavoritesList.length) {
-              var favoriteTiles = ListTile(
-                title: Text(_filteredFavoritesList[itemIdxs]),
-                trailing: IconButton(
-                  icon: const Icon(Icons.delete),
-                  onPressed: () async {
-                    _removeFavorite(_filteredFavoritesList[itemIdxs]);
-                  },
-                )
-              );
-              return favoriteTiles;
-            }
-          },
+          onChanged: (value) => _filterListBySearchText(value),
+          onSubmitted: (value) => _filterListBySearchText(value),
+          ),
         ),
       );
+    
+    var favoritesSearchResults = ListView.builder(
+      physics: const AlwaysScrollableScrollPhysics(),
+      controller: _scrollController,
+      itemCount: _filteredFavoritesList.length,
+      shrinkWrap: true,
+      padding: const EdgeInsets.only(bottom: 10),
+      itemBuilder: (context, itemIdxs) {
+        if (itemIdxs < _filteredFavoritesList.length) {
+          var favoriteTiles = ListTile(
+            title: Text(_filteredFavoritesList[itemIdxs]),
+            trailing: IconButton(
+              icon: const Icon(Icons.delete),
+              onPressed: () async {
+                _removeFavorite(_filteredFavoritesList[itemIdxs]);
+              },
+            )
+          );
+          return favoriteTiles;
+        }
+      },
+    );
       
+    // TODO-TD: move to circular button hovering in bottom right corner
     var addFavButtonAppBar = <Widget>[
       IconButton(
         icon: const Icon(
@@ -878,8 +932,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
           if (resultLabel != null) {
             setState(() {
               _addFavorite(resultLabel);
-              _searchController.text = resultLabel;
-              _filterListBySearchText(resultLabel);
+              _filterListBySearchText("");
             });
           }
         }
@@ -891,7 +944,10 @@ class _FavoritesPageState extends State<FavoritesPage> {
           title: const Text('Favorites'),
           actions: addFavButtonAppBar,
         ),
-      body: searchableFavesList
+      body: Scaffold(
+        appBar: favoritesSearchBar,
+        body: favoritesSearchResults,
+      )
     );
 
     return pageLayout;
