@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+const FAVORITES_KEY = "Favorites";
+
 class FavoritesPage extends StatefulWidget {
 // Favorites page 
     // + button in bottom right to add new
@@ -33,18 +35,23 @@ class _FavoritesPageState extends State<FavoritesPage> {
   
 
   void loadFavorites() {
-    List<String>? savedData = preferences?.getStringList('Favorites');
+    List<String>? savedData = preferences?.getStringList(FAVORITES_KEY);
 
-    if (savedData != null) {
+    if (savedData == null) {
+      preferences?.setStringList(FAVORITES_KEY, _allFavoritesList);
+    } else {
       _allFavoritesList = savedData;
       _filteredFavoritesList = _allFavoritesList;
     }
+
     setState(() {});
   }
 
   @override
   void dispose() {
     _searchController.dispose();
+    _newFavoriteFieldController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -71,27 +78,14 @@ class _FavoritesPageState extends State<FavoritesPage> {
 
   void _addFavorite(name) {
     _allFavoritesList.add(name);
-    preferences?.setStringList("Favorites", _allFavoritesList);
-    setState(() {});
-  }
-
-  void _loadFavorites() {
-    List<String>? savedData = preferences?.getStringList('Favorites');
-
-    if (savedData == null) {
-      preferences?.setStringList("Favorites", _allFavoritesList);
-    } else {
-      _allFavoritesList = savedData;
-      _filteredFavoritesList = _allFavoritesList;
-    }
-
+    preferences?.setStringList(FAVORITES_KEY, _allFavoritesList);
     setState(() {});
   }
 
   void _removeFavorite(name) {
     _allFavoritesList.remove(name);
     _filteredFavoritesList.remove(name);
-    preferences?.setStringList("Favorites", _allFavoritesList);
+    preferences?.setStringList(FAVORITES_KEY, _allFavoritesList);
     setState(() {});
   }
 
@@ -128,6 +122,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
     // TODO-TD: hide search bar unless scrolled up?
     var favoritesSearchBar = AppBar(
       leading: null,
+      automaticallyImplyLeading: false,
       title: Container(
         height: 40,
         decoration: BoxDecoration(borderRadius: BorderRadius.circular(5)),
@@ -178,9 +173,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
     // TODO-TD: move to circular button hovering in bottom right corner
     var addFavButtonAppBar = <Widget>[
       IconButton(
-        icon: const Icon(
-          Icons.star,
-        ),
+        icon: const Icon(Icons.favorite),
         onPressed: () async {
           var resultLabel = await _showTextInputDialog(context);
           if (resultLabel != null) {

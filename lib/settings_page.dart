@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 
 import 'theme_handle.dart';
 
+const EMAIL_KEY = "email";
+
 class SettingsPage extends StatefulWidget {
   // Settings page
   const SettingsPage({super.key});
@@ -75,15 +77,15 @@ class _SettingsPageState extends State<SettingsPage> {
 
   void _updateEmail(name) {
     email = name;
-    preferences?.setString("email", email);
+    preferences?.setString(EMAIL_KEY, email);
     setState(() {});
   }
 
   void _loadEmail() {
-    String? savedData = preferences?.getString('email');
+    String? savedData = preferences?.getString(EMAIL_KEY);
 
     if (savedData == null) {
-      preferences?.setString("email", defaultEmail);
+      preferences?.setString(EMAIL_KEY, defaultEmail);
     } else {
       email = savedData;
     }
@@ -93,7 +95,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
   void _removeEmail() {
     email = defaultEmail;
-    preferences?.setString("email", defaultEmail);
+    preferences?.setString(EMAIL_KEY, defaultEmail);
     setState(() {});
   }
 
@@ -173,7 +175,7 @@ class _SettingsPageState extends State<SettingsPage> {
     );
 
     var clearFavoritesTile = ListTile(
-      leading: const Icon(Icons.star),
+      leading: const Icon(Icons.favorite),
       title: const Text("Clear Favorites"),
       subtitle: const Text("Clear all favorites"),
       trailing: IconButton(
@@ -213,16 +215,19 @@ class _SettingsPageState extends State<SettingsPage> {
                   children: [Text("Common")],
                 ),
                 const ListTile(
+                  // TODO-TD: give control capabilities
                   title: Text("Location"),
                   leading: Icon(Icons.pin_drop),
                   subtitle: Text("Here"),
                 ),
                 const ListTile(
+                  // TODO-TD: give control capabilities
                   title: Text("Notifications"),
                   leading: Icon(Icons.notifications),
                   subtitle: Text("Get notified on upcoming passes"),
                 ),
                 const ListTile(
+                  // TODO-TD: give control capabilities
                   title: Text("Language"),
                   leading: Icon(Icons.language),
                   subtitle: Text("English"),

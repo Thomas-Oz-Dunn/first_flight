@@ -11,14 +11,16 @@ import 'theme_handle.dart';
 import 'settings_page.dart';
 
 
+const FAVORITES_KEY = "Favorites";
+const HISTORY_KEY = "History";
+
 enum SampleItem { load, favorite, remove, share }
 
-
-class Pass{}
 
 class Orbit {
   final String objectName;
   final String objectID;
+  // TODO-TD: populate all fields
 
   const Orbit({
     required this.objectName,
@@ -44,13 +46,8 @@ Future<List<Orbit>> fetchOrbits(String url) async  {
   final response = await http.get(Uri.parse(url));
       
   if (response.statusCode == 200) {
-    List<dynamic> body = jsonDecode(response.body) as List<dynamic>;
-
-    List<Orbit> orbits = [];
-
-    for(final bod in body){
-      orbits.add(Orbit.fromJson(bod));
-    }
+    Iterable l = json.decode(response.body);
+    List<Orbit> orbits = List<Orbit>.from(l.map((model) => Orbit.fromJson(model)));
     return orbits;
 
   } else {
@@ -104,17 +101,15 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPageState extends State<MainPage> {
-  String placeholder = 'https://jsonplaceholder.typicode.com/albums/1';
   late Future<List<Orbit>> futureOrbits;
 
   String spaceFlightNews = "http://api.spaceflightnewsapi.net/v4/articles/";
 
-  String celestrakPreScript = "https://celestrak.org/NORAD/elements/gp.php?";
-
+  String celestrakSite = "https://celestrak.org/NORAD/elements/gp.php?";
   String celestrakName = "NAME=";
   String celestrakRecent = "GROUP=last-30-days";
+  String celestrakJsonFormat = "&FORMAT=JSON";
 
-  String celestrakPostScript = "&FORMAT=JSON";
   final TextEditingController _searchController = TextEditingController();
 
   int defaultPageIndex = 2;
@@ -134,15 +129,16 @@ class _MainPageState extends State<MainPage> {
   //     unFollowUser: false,
   //   )
   // );
-  void updatePageIndex(int index) {
-    setState(() {currentPageIndex = index;});
-  }
   
   @override
   void initState() {
     FlutterNativeSplash.remove();
     initStorage();
-    futureOrbits = fetchOrbits(celestrakPreScript + celestrakRecent + celestrakPostScript);
+    loadHistory();
+
+    String recentLaunchApi = celestrakSite + celestrakRecent + celestrakJsonFormat;
+    futureOrbits = fetchOrbits(recentLaunchApi);
+    
     super.initState();
   }
 
@@ -159,7 +155,7 @@ class _MainPageState extends State<MainPage> {
 
   void _addFavorite(name) {
     favorites.add(name);
-    preferences?.setStringList("Favorites", favorites);
+    preferences?.setStringList(FAVORITES_KEY, favorites);
     setState(() {});
   }
 
@@ -167,24 +163,24 @@ class _MainPageState extends State<MainPage> {
   void _addToHistory(name) {
     // TODO-TD: store chronology datetime of searches
     history.add(name);
-    preferences?.setStringList("History", history);
+    preferences?.setStringList(HISTORY_KEY, history);
     setState(() {});
   }
 
-  void _loadHistory() {
-    List<String>? savedData = preferences?.getStringList("History");
+  void loadHistory() {
+    List<String>? savedData = preferences?.getStringList(HISTORY_KEY);
 
     if (savedData == null) {
-      preferences?.setStringList("History", history);
+      preferences?.setStringList(HISTORY_KEY, history);
     } else {
-      favorites = savedData;
+      history = savedData;
     }
     setState(() {});
   }
 
   void _removeFromHistory(name) {
     history.remove(name);
-    preferences?.setStringList("History", history);
+    preferences?.setStringList(HISTORY_KEY, history);
     setState(() {});
   }
 
@@ -206,7 +202,7 @@ class _MainPageState extends State<MainPage> {
 
     var favoritesButton = IconButton(
         icon: const Icon(
-          Icons.star_border,
+          Icons.favorite_border,
         ),
         onPressed: () {
           Navigator.push(
@@ -218,7 +214,7 @@ class _MainPageState extends State<MainPage> {
       );
       
     Widget buildHistoryList(){
-      _loadHistory();
+      loadHistory();
       // Add search bar to filter history list
       var historyListBuilder = ListView.builder(
         itemBuilder: (context, itemIdxs) {
@@ -327,22 +323,37 @@ class _MainPageState extends State<MainPage> {
     // map 
     // TODO-TD: Open street map of location and overpasses of favorites or view
     const mapPage = Scaffold(
-      body: Center( child: Text('Map Page')),
+      body: Center( child: Text('Map Page TODO')),
     );
 
     // news / recent launches
     // TODO-TD: Tile List of space news article
     // http request spaceFlightNewsSite
     // Related launches
+    
+    // Future<List<Orbit>> querySpaceNews() async {
+    //   final response = await http.get(Uri.parse(spaceFlightNews));
+          
+    //   if (response.statusCode == 200) {
+    //     Iterable l = json.decode(response.body);
+    //     // TODO-TD: create article object
+    //     List<Article> articles = List<Article>.from(l.map((model) => Article.fromJson(model)));
+    //     return articles;
+
+    //   } else {
+    //     throw Exception('Failed to load articles');
+    //   }
+
+    // }
 
     const newsPage = Scaffold(
-      body: Center(child: Text('News')),
+      body: Center(child: Text('News Page TODO')),
     );
     
     // view
     // TODO-TD: Interface with gyroscope for celestial sphere
     const viewPage = Scaffold(
-      body: Center(child: Text('View')),
+      body: Center(child: Text('View Page TODO')),
     );
 
     // history
@@ -351,32 +362,77 @@ class _MainPageState extends State<MainPage> {
     );
 
     Future<List<Orbit>> queryCelestrak(String name){
-      futureOrbits = fetchOrbits(celestrakPreScript + celestrakName + name + celestrakPostScript);
+      String query = celestrakSite + celestrakName + name + celestrakJsonFormat;
+      futureOrbits = fetchOrbits(query);
+      _addToHistory(name);
       return futureOrbits;
     }
 
-    var searchResultsBuilder = FutureBuilder<List<Orbit>>(
-      future: futureOrbits,
-      builder: (context, snapshot) {
-        if (snapshot.hasData) {
-          List<Orbit> orbits = snapshot.data!;
-          List<Widget> orbitTiles = [];
-          for (final orb in orbits) {
-            orbitTiles.add(
-              Text(orb.objectName)
-            );
-          }
+    var searchResultsBuilder = 
+      FutureBuilder<List<Orbit>>(
+        future: futureOrbits,
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            List<Orbit> orbits = snapshot.data!;
 
-          return Column(
-            children: orbitTiles
+            return ListView.builder(
+              itemBuilder: (context, itemIdxs) {
+
+                var buttonOptions = [
+                  MenuItemButton(
+                    onPressed: () =>
+                        setState(() {
+                          selectedMenu = SampleItem.values[0];
+                          // TODO-TD: store list of orbits being viewed
+                        }),
+                    child: const Text('View'),
+                  ),
+                  MenuItemButton(
+                    onPressed: () => 
+                      setState(() {
+                        selectedMenu = SampleItem.values[1];
+                        _addFavorite(history[itemIdxs]);
+                      }),
+                    child: const Text('Favorite'),
+                  ),
+                ];
+
+                if (itemIdxs < orbits.length) {
+                  ListTile(
+                    title: Text(orbits[itemIdxs].objectName),
+                    trailing: MenuAnchor(
+                      menuChildren: buttonOptions,
+                      builder:
+                        (
+                          BuildContext context, 
+                          MenuController controller, 
+                          Widget? child
+                        ) {
+                          var menuButton = IconButton(
+                            icon: const Icon(Icons.more_vert),
+                            onPressed: () {
+                              if (controller.isOpen) {
+                                controller.close();
+                              } else {
+                                controller.open();
+                              }
+                            },
+                          );
+                        return menuButton;
+                      }
+                    )
+                  );
+                  
+                }
+            }
           );
 
-        } else if (snapshot.hasError) {
-          return Text('${snapshot.error}');
-        }
-        return const CircularProgressIndicator();
-      },
-    );
+          } else if (snapshot.hasError) {
+            return Text('${snapshot.error}');
+          }
+          return const CircularProgressIndicator();
+        },
+      );
 
     // search
     var searchBar = Container(
@@ -395,7 +451,8 @@ class _MainPageState extends State<MainPage> {
             onPressed: () {_searchController.text = "";}
           ),
         ),
-        // onChanged: (value) => _queryCelestrak(value),
+        // TODO-TD: display history matches as options before submit?
+        // onChanged: (value) => _queryCelestrak(value), 
         onSubmitted: (value) => queryCelestrak(value),
         ),
       );
@@ -405,7 +462,7 @@ class _MainPageState extends State<MainPage> {
         leading: null,
         title: searchBar,
       ),
-      body: Center(child: searchResultsBuilder),
+      body: searchResultsBuilder,
     );
 
     var pages = <Widget>[
@@ -417,7 +474,9 @@ class _MainPageState extends State<MainPage> {
     ];
 
     var navBar = NavigationBar(
-      onDestinationSelected: updatePageIndex,
+      onDestinationSelected: (int index) {
+        setState(() {currentPageIndex = index;});
+      },
       selectedIndex: currentPageIndex,
       destinations: const <Widget>[
         NavigationDestination(
@@ -457,6 +516,7 @@ class _MainPageState extends State<MainPage> {
       body: pages[currentPageIndex],
       bottomNavigationBar: navBar,
     );
+
     return mainPageLayout;
   }
 }
