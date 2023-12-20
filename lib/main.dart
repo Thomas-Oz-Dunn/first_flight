@@ -3,12 +3,11 @@ import 'package:provider/provider.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 // import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 
 import 'favorites_page.dart';
 import 'theme_handle.dart';
 import 'settings_page.dart';
+import 'orbit_page.dart';
 
 
 const FAVORITES_KEY = "Favorites";
@@ -16,44 +15,21 @@ const HISTORY_KEY = "History";
 
 enum SampleItem { load, favorite, remove, share }
 
+// class Article{
+  
+// id*	[...]
+// title*	[...]
+// url*	[...]
+// image_url*	[...]
+// news_site*	[...]
+// summary*	[...]
+// published_at*	[...]
+// updated_at*	[...]
+// featured	[...]
+// launches*	[...]
+// events*	[...]
 
-class Orbit {
-  final String objectName;
-  final String objectID;
-  // TODO-TD: populate all fields
-
-  const Orbit({
-    required this.objectName,
-    required this.objectID,
-  });
-
-  factory Orbit.fromJson(dynamic json) {
-    return switch (json) {
-      {
-        'OBJECT_NAME': String objectName,
-        'OBJECT_ID': String objectID
-      } =>
-        Orbit(
-          objectName: objectName,
-          objectID: objectID
-        ),
-      _ => throw const FormatException('Failed to load Orbit.'),
-    };
-  }
-}
-
-Future<List<Orbit>> fetchOrbits(String url) async  {
-  final response = await http.get(Uri.parse(url));
-      
-  if (response.statusCode == 200) {
-    Iterable l = json.decode(response.body);
-    List<Orbit> orbits = List<Orbit>.from(l.map((model) => Orbit.fromJson(model)));
-    return orbits;
-
-  } else {
-    throw Exception('Failed to load orbits');
-  }
-}
+// }
 
 
 void main() {
@@ -154,6 +130,10 @@ class _MainPageState extends State<MainPage> {
   }
 
   void _addFavorite(name) {
+    List<String>? savedData = preferences?.getStringList(FAVORITES_KEY);
+    if (savedData != null) {
+      favorites = savedData;
+    }
     favorites.add(name);
     preferences?.setStringList(FAVORITES_KEY, favorites);
     setState(() {});
@@ -383,7 +363,7 @@ class _MainPageState extends State<MainPage> {
                     onPressed: () =>
                         setState(() {
                           selectedMenu = SampleItem.values[0];
-                          // TODO-TD: store list of orbits being viewed
+                          // TODO-TD: store list of orbits to be viewed
                         }),
                     child: const Text('View'),
                   ),
@@ -391,15 +371,23 @@ class _MainPageState extends State<MainPage> {
                     onPressed: () => 
                       setState(() {
                         selectedMenu = SampleItem.values[1];
-                        _addFavorite(history[itemIdxs]);
+                        _addFavorite(orbits[itemIdxs].objectName);
                       }),
                     child: const Text('Favorite'),
                   ),
                 ];
 
                 if (itemIdxs < orbits.length) {
-                  ListTile(
+                  var orbitTile = ListTile(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const OrbitPage(orbits[itemIdxs])),
+                      );
+                    },
                     title: Text(orbits[itemIdxs].objectName),
+                    subtitle: Text(orbits[itemIdxs].objectID),
                     trailing: MenuAnchor(
                       menuChildren: buttonOptions,
                       builder:
@@ -422,7 +410,7 @@ class _MainPageState extends State<MainPage> {
                       }
                     )
                   );
-                  
+                  return orbitTile;
                 }
             }
           );
@@ -443,7 +431,11 @@ class _MainPageState extends State<MainPage> {
         decoration: InputDecoration(
           prefixIcon: IconButton(
             icon: const Icon(Icons.search_rounded),
-            onPressed: () => FocusScope.of(context).unfocus(),
+            onPressed: () {
+              if (_searchController.text != ""){
+                queryCelestrak(_searchController.text);
+              }
+            },
           ),
           hintText: 'Search Orbits',
           suffixIcon: IconButton(
