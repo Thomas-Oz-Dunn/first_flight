@@ -96,6 +96,7 @@ class _MainPageState extends State<MainPage> {
 
   String celestrakPreScript = "https://celestrak.org/NORAD/elements/gp.php?NAME=";
   String celestrakPostScript = "&FORMAT=JSON";
+  final TextEditingController _searchController = TextEditingController();
 
   int defaultPageIndex = 2;
   int currentPageIndex = 2;
@@ -352,54 +353,37 @@ class _MainPageState extends State<MainPage> {
       body: buildHistoryList()
     );
 
-    var searchBar = SearchAnchor(
-      builder: (BuildContext context, SearchController controller) {
-        return SearchBar(
-          controller: controller,
-          padding: const MaterialStatePropertyAll<EdgeInsets>(
-              EdgeInsets.symmetric(horizontal: 16.0)),
-          onTap: () {
-            controller.openView();
-          },
-          onChanged: (_) {
-            controller.openView();
-            // Query celestrak with NAME
-            // celestrakPreScript
-            // celestrakPostScript
-          },
-          leading: const Icon(Icons.search),
-        );
-      }, 
-      suggestionsBuilder:
-        (BuildContext context, SearchController controller) {
+    void _queryCelestrak(String name){
 
-          var lists = List<ListTile>.generate(5, (int index) {
-              final String item = 'item $index';
-              return ListTile(
-                title: Text(item),
-                onTap: () {
-                  setState(() {
-                    controller.closeView(item);
-                    // TODO-TD: When click on tile, open metadata page, append to history
+      String query = celestrakPreScript + name + celestrakPostScript;
 
-                  }
-                );
-              },
-            );
-          }
-        );
-      return lists;
+      // Format what we receive
     }
-  );
 
     // search
-    var searchPage = Scaffold(
-      body: Column(
-        children: [
-          searchBar
-        ]
-      ),
-    );
+    var searchPage = Container(
+      height: 40,
+      decoration: BoxDecoration(borderRadius: BorderRadius.circular(5)),
+      child: TextField(
+        controller: _searchController,
+        decoration: InputDecoration(
+          prefixIcon: IconButton(
+            icon: const Icon(Icons.search_rounded),
+            onPressed: () => FocusScope.of(context).unfocus(),
+          ),
+          hintText: 'Filter Favorites',
+          suffixIcon: IconButton(
+            icon: const Icon(Icons.clear_rounded),
+            onPressed: () {
+              _searchController.text = "";
+              _queryCelestrak("");
+            }
+          ),
+        ),
+          onChanged: (value) => _queryCelestrak(value),
+          onSubmitted: (value) => _queryCelestrak(value),
+          ),
+        );
 
     var pages = <Widget>[
       mapPage,
@@ -470,14 +454,17 @@ class _SettingsPageState extends State<SettingsPage> {
     // - reset all settings
     // - control location services
     // - enable disable notifications
-    // - sensro calibration
+    // - sensor calibration
 
   final _textFieldController = TextEditingController();
   final _editingController = TextEditingController();
 
-  final List<String> titles = ["Email", "Language"];
+  final List<String> titles = [
+    "Email", 
+    "Language"
+  ];
 
-  List<String> searchItems = [];
+  List<String> filteredItems = [];
   
   SharedPreferences? preferences;
   String defaultEmail = 'person@email.com';
@@ -495,15 +482,15 @@ class _SettingsPageState extends State<SettingsPage> {
       for (final saved in savedData) {
         savedData.remove(saved);
       }
+
       preferences?.setStringList(name, savedData);
       setState(() {});
-
     }
   }
 
   void filterSearchResults(String query) {
     setState(() {
-      searchItems = titles
+      filteredItems = titles
           .where((item) => item.toLowerCase().contains(query.toLowerCase()))
           .toList();
     });
@@ -594,9 +581,7 @@ class _SettingsPageState extends State<SettingsPage> {
       title: const Text("Email"),
       subtitle: Text(email),
       trailing: IconButton(
-        icon: const Icon(
-          Icons.delete,
-        ),
+        icon: const Icon(Icons.delete),
         onPressed: () async {
           _removeEmail();
         },
@@ -617,12 +602,8 @@ class _SettingsPageState extends State<SettingsPage> {
       title: const Text("Clear History"),
       subtitle: const Text("Clear all search history"),
       trailing: IconButton(
-        icon: const Icon(
-          Icons.delete_forever_sharp,
-        ),
-        onPressed: () async {
-          _clearMemory("History");
-        },
+        icon: const Icon(Icons.delete_forever_sharp),
+        onPressed: () async {_clearMemory("History");},
       )
     );
 
@@ -631,12 +612,8 @@ class _SettingsPageState extends State<SettingsPage> {
       title: const Text("Clear Favorites"),
       subtitle: const Text("Clear all favorites"),
       trailing: IconButton(
-        icon: const Icon(
-          Icons.delete_forever_sharp,
-        ),
-        onPressed: () async {
-          _clearMemory("Favorites");
-        },
+        icon: const Icon(Icons.delete_forever_sharp),
+        onPressed: () async {_clearMemory("Favorites");},
       )
     );
 
