@@ -378,16 +378,17 @@ class _MainPageState extends State<MainPage> {
                 ];
 
                 if (itemIdxs < orbits.length) {
+                  // TODO-TD: Most recent first
                   var orbitTile = ListTile(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => const OrbitPage(orbits[itemIdxs])),
-                      );
-                    },
+                    // onTap: () {
+                    //   Navigator.push(
+                    //     context,
+                    //     MaterialPageRoute(
+                    //         builder: (context) => const OrbitPage(orbits[itemIdxs])),
+                    //   );
+                    // },
                     title: Text(orbits[itemIdxs].objectName),
-                    subtitle: Text(orbits[itemIdxs].objectID),
+                    subtitle: Text('ID: ${orbits[itemIdxs].objectID} | Epoch: ${orbits[itemIdxs].epoch}'),
                     trailing: MenuAnchor(
                       menuChildren: buttonOptions,
                       builder:
