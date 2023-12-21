@@ -7,7 +7,7 @@ class Orbit {
   final String objectName;
   final String objectID;
   final String epoch;
-  // final double meanMotion;
+  final double meanMotion;
   // final double eccentricity; 
   // final double inc;
   // final double raan; 
@@ -26,7 +26,7 @@ class Orbit {
     required this.objectName,
     required this.objectID,
     required this.epoch,
-    // required this.meanMotion,
+    required this.meanMotion,
     // required this.eccentricity,
     // required this.inc,
     // required this.raan,
@@ -48,7 +48,7 @@ class Orbit {
         'OBJECT_NAME': String objectName,
         'OBJECT_ID': String objectID,
         'EPOCH': String epoch,
-        // 'MEAN_MOTION': double meanMotion, 
+        'MEAN_MOTION': double meanMotion, 
         // 'ECCENTRICITY': double eccentricity, 
         // 'INCLINATION': double inc, 
         // 'RA_OF_ASC_NODE': double raan, 
@@ -67,7 +67,7 @@ class Orbit {
           objectName: objectName,
           objectID: objectID,
           epoch: epoch,
-          // meanMotion: meanMotion,
+          meanMotion: meanMotion,
           // eccentricity: eccentricity,
           // inc: inc,
           // raan: raan,
@@ -101,14 +101,27 @@ Future<List<Orbit>> fetchOrbits(String url) async  {
 }
 
 
-// class OrbitPage extends StatefulWidget {
-//   // Orbit page
-//   const OrbitPage({super.key, Orbit orbit});
+class OrbitPage extends StatelessWidget {
+  final Orbit orbit;
 
-//   @override
-//   State<OrbitPage> createState() => _OrbitPageState(Orbit orbit);
-// }
+  const OrbitPage({super.key, required this.orbit});
 
-// class _OrbitPageState extends State<OrbitPage> {
-
-// }
+  // Pass in Orbit object
+  @override
+  Widget build(BuildContext context){
+    return Scaffold(
+      appBar: AppBar(title: Text(orbit.objectName)),
+      // TODO-TD: 3d picture
+      body: ListView(
+        children: [
+          // TODO-TD: create button set
+          const Text('Like, Share, Notify'),
+          const Text('Next Passes: TODO'), 
+          Text(
+            'ID: ${orbit.objectID}\nEPOCH: ${orbit.epoch}\nMean Motion: ${orbit.meanMotion}'
+          ),
+        ]
+      ),
+    );
+  }
+}

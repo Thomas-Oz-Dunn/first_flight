@@ -8,29 +8,13 @@ import 'favorites_page.dart';
 import 'theme_handle.dart';
 import 'settings_page.dart';
 import 'orbit_page.dart';
+import 'news_page.dart';
 
 
 const FAVORITES_KEY = "Favorites";
 const HISTORY_KEY = "History";
 
 enum SampleItem { load, favorite, remove, share }
-
-// class Article{
-  
-// id*	[...]
-// title*	[...]
-// url*	[...]
-// image_url*	[...]
-// news_site*	[...]
-// summary*	[...]
-// published_at*	[...]
-// updated_at*	[...]
-// featured	[...]
-// launches*	[...]
-// events*	[...]
-
-// }
-
 
 void main() {
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
@@ -78,8 +62,6 @@ class MainPage extends StatefulWidget {
 
 class _MainPageState extends State<MainPage> {
   late Future<List<Orbit>> futureOrbits;
-
-  String spaceFlightNews = "http://api.spaceflightnewsapi.net/v4/articles/";
 
   String celestrakSite = "https://celestrak.org/NORAD/elements/gp.php?";
   String celestrakName = "NAME=";
@@ -168,9 +150,7 @@ class _MainPageState extends State<MainPage> {
   Widget build(BuildContext context){
 
     var settingsButton = IconButton(
-      icon: const Icon(
-        Icons.settings,
-      ),
+      icon: const Icon(Icons.settings),
       onPressed: () {
         Navigator.push(
           context,
@@ -181,9 +161,7 @@ class _MainPageState extends State<MainPage> {
     );
 
     var favoritesButton = IconButton(
-        icon: const Icon(
-          Icons.favorite_border,
-        ),
+        icon: const Icon(Icons.favorite_border),
         onPressed: () {
           Navigator.push(
             context,
@@ -306,28 +284,8 @@ class _MainPageState extends State<MainPage> {
       body: Center( child: Text('Map Page TODO')),
     );
 
-    // news / recent launches
-    // TODO-TD: Tile List of space news article
-    // http request spaceFlightNewsSite
-    // Related launches
-    
-    // Future<List<Orbit>> querySpaceNews() async {
-    //   final response = await http.get(Uri.parse(spaceFlightNews));
-          
-    //   if (response.statusCode == 200) {
-    //     Iterable l = json.decode(response.body);
-    //     // TODO-TD: create article object
-    //     List<Article> articles = List<Article>.from(l.map((model) => Article.fromJson(model)));
-    //     return articles;
-
-    //   } else {
-    //     throw Exception('Failed to load articles');
-    //   }
-
-    // }
-
-    const newsPage = Scaffold(
-      body: Center(child: Text('News Page TODO')),
+    var newsPage = Scaffold(
+      body: newsFeedBuilder,
     );
     
     // view
@@ -356,8 +314,8 @@ class _MainPageState extends State<MainPage> {
             List<Orbit> orbits = snapshot.data!;
 
             return ListView.builder(
+              reverse: true,
               itemBuilder: (context, itemIdxs) {
-
                 var buttonOptions = [
                   MenuItemButton(
                     onPressed: () =>
@@ -378,17 +336,19 @@ class _MainPageState extends State<MainPage> {
                 ];
 
                 if (itemIdxs < orbits.length) {
-                  // TODO-TD: Most recent first
                   var orbitTile = ListTile(
-                    // onTap: () {
-                    //   Navigator.push(
-                    //     context,
-                    //     MaterialPageRoute(
-                    //         builder: (context) => const OrbitPage(orbits[itemIdxs])),
-                    //   );
-                    // },
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => OrbitPage(
+                              orbit: orbits[itemIdxs]
+                            )
+                          ),
+                      );
+                    },
                     title: Text(orbits[itemIdxs].objectName),
-                    subtitle: Text('ID: ${orbits[itemIdxs].objectID} | Epoch: ${orbits[itemIdxs].epoch}'),
+                    subtitle: Text('ID: ${orbits[itemIdxs].objectID}'),
                     trailing: MenuAnchor(
                       menuChildren: buttonOptions,
                       builder:

@@ -1,3 +1,4 @@
+import 'package:first_flight/main.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:provider/provider.dart';
@@ -39,20 +40,14 @@ class _SettingsPageState extends State<SettingsPage> {
   
   void _clearMemory(String name){
 
-    List<String>? savedData = preferences?.getStringList(name);
+    List<String>? queuedData = preferences?.getStringList(name);
 
-    if (savedData == null) {
-      setState(() {});
-
-    } else {
-
-      for (final saved in savedData) {
-        savedData.remove(saved);
-      }
-
-      preferences?.setStringList(name, savedData);
-      setState(() {});
+    if (queuedData != null) {
+      queuedData = [];
+      preferences?.setStringList(name, queuedData);
     }
+
+    setState(() {});
   }
 
   void filterSearchResults(String query) {
@@ -170,7 +165,7 @@ class _SettingsPageState extends State<SettingsPage> {
       subtitle: const Text("Clear all search history"),
       trailing: IconButton(
         icon: const Icon(Icons.delete_forever_sharp),
-        onPressed: () async {_clearMemory("History");},
+        onPressed: () async {_clearMemory(HISTORY_KEY);},
       )
     );
 
@@ -180,7 +175,7 @@ class _SettingsPageState extends State<SettingsPage> {
       subtitle: const Text("Clear all favorites"),
       trailing: IconButton(
         icon: const Icon(Icons.delete_forever_sharp),
-        onPressed: () async {_clearMemory("Favorites");},
+        onPressed: () async {_clearMemory(FAVORITES_KEY);},
       )
     );
 
