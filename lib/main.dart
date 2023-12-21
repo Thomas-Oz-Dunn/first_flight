@@ -73,8 +73,6 @@ class _MainPageState extends State<MainPage> {
   int defaultPageIndex = 2;
   int currentPageIndex = 2;
 
-  SampleItem? selectedMenu;
-
   SharedPreferences? preferences;
 
   List<String> history = [];
@@ -108,6 +106,8 @@ class _MainPageState extends State<MainPage> {
 
   Future<void> initStorage() async {
     preferences = await SharedPreferences.getInstance();
+    loadFavorites();
+    loadHistory();
     setState(() {});
   }
 
@@ -126,6 +126,17 @@ class _MainPageState extends State<MainPage> {
     // TODO-TD: store chronology datetime of searches
     history.add(name);
     preferences?.setStringList(HISTORY_KEY, history);
+    setState(() {});
+  }
+
+  void loadFavorites() {
+    List<String>? savedData = preferences?.getStringList(FAVORITES_KEY);
+
+    if (savedData == null) {
+      preferences?.setStringList(FAVORITES_KEY, favorites);
+    } else {
+      favorites = savedData;
+    }
     setState(() {});
   }
 
@@ -181,7 +192,6 @@ class _MainPageState extends State<MainPage> {
               MenuItemButton(
                 onPressed: () =>
                     setState(() {
-                      selectedMenu = SampleItem.values[0];
                       // TODO-TD: store list of orbits being viewed
                     }),
                 child: const Text('View'),
@@ -189,7 +199,6 @@ class _MainPageState extends State<MainPage> {
               MenuItemButton(
                 onPressed: () => 
                   setState(() {
-                    selectedMenu = SampleItem.values[1];
                     _addFavorite(history[itemIdxs]);
                   }),
                 child: const Text('Favorite'),
@@ -197,7 +206,6 @@ class _MainPageState extends State<MainPage> {
               MenuItemButton(
                 onPressed: () => 
                   setState(() {
-                    selectedMenu = SampleItem.values[2];
                     _removeFromHistory(history[itemIdxs]);
                   }),
                 child: const Text('Remove'),
@@ -314,13 +322,11 @@ class _MainPageState extends State<MainPage> {
             List<Orbit> orbits = snapshot.data!;
 
             return ListView.builder(
-              reverse: true,
               itemBuilder: (context, itemIdxs) {
                 var buttonOptions = [
                   MenuItemButton(
                     onPressed: () =>
                         setState(() {
-                          selectedMenu = SampleItem.values[0];
                           // TODO-TD: store list of orbits to be viewed
                         }),
                     child: const Text('View'),
@@ -328,7 +334,6 @@ class _MainPageState extends State<MainPage> {
                   MenuItemButton(
                     onPressed: () => 
                       setState(() {
-                        selectedMenu = SampleItem.values[1];
                         _addFavorite(orbits[itemIdxs].objectName);
                       }),
                     child: const Text('Favorite'),
