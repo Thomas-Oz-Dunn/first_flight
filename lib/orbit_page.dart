@@ -50,7 +50,7 @@ class Orbit {
       Inclination: $inc deg
       Ascending Node: $raan  deg
       Argument Perigee: $argPericenter deg
-      meanAnom: $meanAnom deg'''; 
+      Mean Anomaly: $meanAnom deg'''; 
   }
 
   factory Orbit.fromJson(Map<String, dynamic> json) {
@@ -61,18 +61,18 @@ class Orbit {
         'EPOCH': String epoch,
         'MEAN_MOTION': double meanMotion, 
         'ECCENTRICITY': double eccentricity, 
-        'INCLINATION': double inc, 
-        'RA_OF_ASC_NODE': double raan, 
-        'ARG_OF_PERICENTER': double argPericenter, 
-        'MEAN_ANOMALY': double meanAnom, 
+        'INCLINATION': num inc, 
+        'RA_OF_ASC_NODE': num raan, 
+        'ARG_OF_PERICENTER': num argPericenter, 
+        'MEAN_ANOMALY': num meanAnom, 
         'EPHEMERIS_TYPE': int ephemType, 
         'CLASSIFICATION_TYPE': String classification, 
         'NORAD_CAT_ID': int noradID, 
         'ELEMENT_SET_NO': int elemSetNo, 
         'REV_AT_EPOCH': int revNum, 
-        'BSTAR': double bStar, 
-        'MEAN_MOTION_DOT': double meanMotionDot, 
-        'MEAN_MOTION_DDOT': double meanMotionDdot, 
+        'BSTAR': num bStar, 
+        'MEAN_MOTION_DOT': num meanMotionDot, 
+        'MEAN_MOTION_DDOT': num meanMotionDdot, 
       } =>
         Orbit(
           objectName: objectName,
@@ -80,20 +80,20 @@ class Orbit {
           epoch: epoch,
           meanMotion: meanMotion,
           eccentricity: eccentricity,
-          inc: inc,
-          raan: raan,
-          argPericenter: argPericenter,
-          meanAnom: meanAnom,
+          inc: inc.toDouble(),
+          raan: raan.toDouble(),
+          argPericenter: argPericenter.toDouble(),
+          meanAnom: meanAnom.toDouble(),
           ephemType: ephemType,
           classification: classification,
           norad: noradID,
           elemSetNo: elemSetNo,
           revNum: revNum,
-          bStar: bStar,
-          meanMotionDot: meanMotionDot,
-          meanMotionDdot: meanMotionDdot,
+          bStar: bStar.toDouble(),
+          meanMotionDot: meanMotionDot.toDouble(),
+          meanMotionDdot: meanMotionDdot.toDouble(),
         ),
-      _ => throw const FormatException('Failed to load Orbit.'),
+      _ => throw FormatException('Failed to load: $json'),
     };
   }
 }
@@ -138,11 +138,11 @@ class OrbitPage extends StatelessWidget {
       body: ListView(
         children: [
           const Divider(),
-          const Text('TODO-TD: Picture'),
+          const Text('TODO: Picture'),
           const Divider(),
           const Row(
             mainAxisAlignment: MainAxisAlignment.end,
-            children: [Text('TODO-TD: Favorite, Share, Notify Buttons')]
+            children: [Text('TODO: Favorite, Share, Notify Buttons')]
           ),
           const Divider(),
           const Text('Next Passes List: TODO'), 
