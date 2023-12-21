@@ -67,7 +67,8 @@ class _MainPageState extends State<MainPage> {
   String celestrakName = "NAME=";
   String celestrakRecent = "GROUP=last-30-days";
   String celestrakJsonFormat = "&FORMAT=JSON";
-
+  late String recentLaunchApi;
+  
   final TextEditingController _searchController = TextEditingController();
 
   int defaultPageIndex = 2;
@@ -90,9 +91,8 @@ class _MainPageState extends State<MainPage> {
   void initState() {
     FlutterNativeSplash.remove();
     initStorage();
-    loadHistory();
 
-    String recentLaunchApi = celestrakSite + celestrakRecent + celestrakJsonFormat;
+    recentLaunchApi = celestrakSite + celestrakRecent + celestrakJsonFormat;
     futureOrbits = fetchOrbits(recentLaunchApi);
     
     super.initState();
@@ -157,6 +157,13 @@ class _MainPageState extends State<MainPage> {
     setState(() {});
   }
 
+  Future<List<Orbit>> queryCelestrak(String name){
+    String query = celestrakSite + celestrakName + name + celestrakJsonFormat;
+    futureOrbits = fetchOrbits(query);
+    _addToHistory(name);
+    return futureOrbits;
+  }
+
   @override
   Widget build(BuildContext context){
 
@@ -182,66 +189,70 @@ class _MainPageState extends State<MainPage> {
         },
       );
       
-    Widget buildHistoryList(){
-      loadHistory();
-      // Add search bar to filter history list
-      var historyListBuilder = ListView.builder(
-        itemBuilder: (context, itemIdxs) {
-          if (itemIdxs < history.length) {
-            var buttonOptions = [
-              MenuItemButton(
-                onPressed: () =>
-                    setState(() {
-                      // TODO-TD: store list of orbits being viewed
-                    }),
-                child: const Text('View'),
-              ),
-              MenuItemButton(
-                onPressed: () => 
+    // Add search bar to filter history list
+    var historyListBuilder = ListView.builder(
+      itemBuilder: (context, itemIdxs) {
+        if (itemIdxs < history.length) {
+          int backIdx = history.length - 1 -itemIdxs;
+          var buttonOptions = [
+            MenuItemButton(
+              onPressed: () =>
                   setState(() {
-                    _addFavorite(history[itemIdxs]);
+                    queryCelestrak(history[backIdx]);
+                    _searchController.text = history[backIdx];
+                    currentPageIndex = 4;
                   }),
-                child: const Text('Favorite'),
-              ),
-              MenuItemButton(
-                onPressed: () => 
+              child: const Text('Research'),
+            ),
+            MenuItemButton(
+              onPressed: () =>
                   setState(() {
-                    _removeFromHistory(history[itemIdxs]);
+                    // TODO-TD: store list of orbits being viewed
                   }),
-                child: const Text('Remove'),
-              ),
-            ];
+              child: const Text('View'),
+            ),
+            MenuItemButton(
+              onPressed: () => 
+                setState(() {_addFavorite(history[backIdx]);}),
+              child: const Text('Favorite'),
+            ),
+            MenuItemButton(
+              onPressed: () => 
+                setState(() {
+                  _removeFromHistory(history[backIdx]);
+                }),
+              child: const Text('Remove'),
+            ),
+          ];
 
-            var historyTiles = ListTile(
-              title: Text(history[itemIdxs]),
-              trailing: MenuAnchor(
-                menuChildren: buttonOptions,
-                builder:
-                  (
-                    BuildContext context, 
-                    MenuController controller, 
-                    Widget? child
-                  ) {
-                    var menuButton = IconButton(
-                      icon: const Icon(Icons.more_vert),
-                      onPressed: () {
-                        if (controller.isOpen) {
-                          controller.close();
-                        } else {
-                          controller.open();
-                        }
-                      },
-                    );
-                  return menuButton;
-                }
-              )
-            );
-            return historyTiles;
-          }
-        },
-      );
-      return historyListBuilder;
-    }
+          var historyTiles = ListTile(
+            title: Text(history[backIdx]),
+            trailing: MenuAnchor(
+              menuChildren: buttonOptions,
+              builder:
+                (
+                  BuildContext context, 
+                  MenuController controller, 
+                  Widget? child
+                ) {
+                  var menuButton = IconButton(
+                    icon: const Icon(Icons.more_vert),
+                    onPressed: () {
+                      if (controller.isOpen) {
+                        controller.close();
+                      } else {
+                        controller.open();
+                      }
+                    },
+                  );
+                return menuButton;
+              }
+            )
+          );
+          return historyTiles;
+        }
+      },
+    );
 
     // var OpenMap = OSMFlutter( 
     //     controller: mapController,
@@ -304,15 +315,8 @@ class _MainPageState extends State<MainPage> {
 
     // history
     var historyPage = Scaffold(
-      body: buildHistoryList()
+      body: historyListBuilder
     );
-
-    Future<List<Orbit>> queryCelestrak(String name){
-      String query = celestrakSite + celestrakName + name + celestrakJsonFormat;
-      futureOrbits = fetchOrbits(query);
-      _addToHistory(name);
-      return futureOrbits;
-    }
 
     var searchResultsBuilder = 
       FutureBuilder<List<Orbit>>(
@@ -320,7 +324,6 @@ class _MainPageState extends State<MainPage> {
         builder: (context, snapshot) {
           if (snapshot.hasData) {
             List<Orbit> orbits = snapshot.data!;
-
             return ListView.builder(
               itemBuilder: (context, itemIdxs) {
                 var buttonOptions = [
@@ -341,19 +344,21 @@ class _MainPageState extends State<MainPage> {
                 ];
 
                 if (itemIdxs < orbits.length) {
+                  Orbit orbit = orbits[itemIdxs];
                   var orbitTile = ListTile(
                     onTap: () {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
                             builder: (context) => OrbitPage(
-                              orbit: orbits[itemIdxs]
+                              orbit: orbit
                             )
                           ),
                       );
                     },
-                    title: Text(orbits[itemIdxs].objectName),
-                    subtitle: Text('ID: ${orbits[itemIdxs].objectID}'),
+                    title: Text(orbit.objectName),
+                    // TODO-TD: next pass in subtitle
+                    subtitle: Text('Epoch Date Time (UTC): ${orbit.epoch}'),
                     trailing: MenuAnchor(
                       menuChildren: buttonOptions,
                       builder:
@@ -403,14 +408,17 @@ class _MainPageState extends State<MainPage> {
               }
             },
           ),
-          hintText: 'Search Orbits',
+          hintText: 'Search Satellites',
           suffixIcon: IconButton(
             icon: const Icon(Icons.clear_rounded),
-            onPressed: () {_searchController.text = "";}
+            onPressed: () {
+              setState(() {
+                _searchController.text = ""; 
+                futureOrbits = fetchOrbits(recentLaunchApi);
+              });
+            }
           ),
         ),
-        // TODO-TD: display history matches as options before submit?
-        // onChanged: (value) => _queryCelestrak(value), 
         onSubmitted: (value) => queryCelestrak(value),
         ),
       );
