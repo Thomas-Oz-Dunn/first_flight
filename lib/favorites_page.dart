@@ -29,7 +29,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
   List<String> _allFavoritesList = [];
   List<String> _filteredFavoritesList = [];
 
-  final TextEditingController _searchController = TextEditingController();
+  final TextEditingController _searchFaveController = TextEditingController();
   final _newFavoriteFieldController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   
@@ -49,7 +49,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
 
   @override
   void dispose() {
-    _searchController.dispose();
+    _searchFaveController.dispose();
     _newFavoriteFieldController.dispose();
     _scrollController.dispose();
     super.dispose();
@@ -127,7 +127,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
         height: 40,
         decoration: BoxDecoration(borderRadius: BorderRadius.circular(5)),
         child: TextField(
-          controller: _searchController,
+          controller: _searchFaveController,
           decoration: InputDecoration(
             prefixIcon: IconButton(
               icon: const Icon(Icons.search_rounded),
@@ -137,7 +137,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
             suffixIcon: IconButton(
               icon: const Icon(Icons.clear_rounded),
               onPressed: () {
-                _searchController.text = "";
+                _searchFaveController.text = "";
                 _filterListBySearchText("");
               }
             ),

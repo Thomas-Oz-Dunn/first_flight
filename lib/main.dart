@@ -160,7 +160,6 @@ class _MainPageState extends State<MainPage> {
   Future<List<Orbit>> queryCelestrak(String name){
     String query = celestrakSite + celestrakName + name + celestrakJsonFormat;
     futureOrbits = fetchOrbits(query);
-    _addToHistory(name);
     return futureOrbits;
   }
 
@@ -189,7 +188,7 @@ class _MainPageState extends State<MainPage> {
         },
       );
       
-    // Add search bar to filter history list
+    // TODO-TD: Add search bar to filter history list
     var historyListBuilder = ListView.builder(
       itemBuilder: (context, itemIdxs) {
         if (itemIdxs < history.length) {
@@ -202,7 +201,7 @@ class _MainPageState extends State<MainPage> {
                     _searchController.text = history[backIdx];
                     currentPageIndex = 4;
                   }),
-              child: const Text('Research'),
+              child: const Text('Re-Search'),
             ),
             MenuItemButton(
               onPressed: () =>
@@ -404,7 +403,12 @@ class _MainPageState extends State<MainPage> {
             icon: const Icon(Icons.search_rounded),
             onPressed: () {
               if (_searchController.text != ""){
+                _addToHistory(_searchController.text);
                 queryCelestrak(_searchController.text);
+              } else {
+                setState(() {
+                  futureOrbits = fetchOrbits(recentLaunchApi);
+                });
               }
             },
           ),
@@ -419,7 +423,16 @@ class _MainPageState extends State<MainPage> {
             }
           ),
         ),
-        onSubmitted: (value) => queryCelestrak(value),
+        onSubmitted: (value) { 
+          if (value.trim() == ""){
+            setState(() {
+              futureOrbits = fetchOrbits(recentLaunchApi);
+           });
+          } else {
+            _addToHistory(value);
+            queryCelestrak(value);
+          }
+        },
         ),
       );
 
@@ -428,7 +441,13 @@ class _MainPageState extends State<MainPage> {
         leading: null,
         title: searchBar,
       ),
-      body: searchResultsBuilder,
+      body: Scaffold(
+        appBar: (_searchController.text != "") ? null : AppBar(
+          title: const Text('Most Recent Launches'), 
+          automaticallyImplyLeading: false,
+        ),
+        body: searchResultsBuilder,
+      )
     );
 
     var pages = <Widget>[

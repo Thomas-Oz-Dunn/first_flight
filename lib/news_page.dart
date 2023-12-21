@@ -53,7 +53,7 @@ class Article{
 
 Future<List<Article>> querySpaceNews() async {
   // Show me everything since yesterday
-  // TODO-TD: toggle look time
+  // TODO-TD: toggle look back time
   String spaceFlightNews = "http://api.spaceflightnewsapi.net/v4/articles/?published_at_gte=";
   final now = DateTime.now();
   final yesterday = '${now.year.toString()}-${now.month.toString()}-${(now.day-1).toString()}';
