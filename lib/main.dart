@@ -62,7 +62,6 @@ class MainPage extends StatefulWidget {
 
 class _MainPageState extends State<MainPage> {
   late Future<List<Orbit>> futureOrbits;
-
   String celestrakSite = "https://celestrak.org/NORAD/elements/gp.php?";
   String celestrakName = "NAME=";
   String celestrakRecent = "GROUP=last-30-days";
@@ -111,24 +110,6 @@ class _MainPageState extends State<MainPage> {
     setState(() {});
   }
 
-  void _addFavorite(name) {
-    List<String>? savedData = preferences?.getStringList(FAVORITES_KEY);
-    if (savedData != null) {
-      favorites = savedData;
-    }
-    favorites.add(name);
-    preferences?.setStringList(FAVORITES_KEY, favorites);
-    setState(() {});
-  }
-
-  // Manage search history
-  void _addToHistory(name) {
-    // TODO-TD: store chronology datetime of searches
-    history.add(name);
-    preferences?.setStringList(HISTORY_KEY, history);
-    setState(() {});
-  }
-
   void loadFavorites() {
     List<String>? savedData = preferences?.getStringList(FAVORITES_KEY);
 
@@ -151,6 +132,25 @@ class _MainPageState extends State<MainPage> {
     setState(() {});
   }
 
+  void _addFavorite(name) {
+    favorites.add(name);
+    preferences?.setStringList(FAVORITES_KEY, favorites);
+    setState(() {});
+  }
+
+  void _addToHistory(name) {
+    // TODO-TD: store chronology datetime of searches
+    history.add(name);
+    preferences?.setStringList(HISTORY_KEY, history);
+    setState(() {});
+  }
+
+  void _removeFromFavorites(name) {
+    favorites.remove(name);
+    preferences?.setStringList(FAVORITES_KEY, favorites);
+    setState(() {});
+  }
+  
   void _removeFromHistory(name) {
     history.remove(name);
     preferences?.setStringList(HISTORY_KEY, history);
@@ -392,7 +392,6 @@ class _MainPageState extends State<MainPage> {
         },
       );
 
-    // search
     var searchBar = Container(
       height: 40,
       decoration: BoxDecoration(borderRadius: BorderRadius.circular(5)),
@@ -427,7 +426,7 @@ class _MainPageState extends State<MainPage> {
           if (value.trim() == ""){
             setState(() {
               futureOrbits = fetchOrbits(recentLaunchApi);
-           });
+            });
           } else {
             _addToHistory(value);
             queryCelestrak(value);

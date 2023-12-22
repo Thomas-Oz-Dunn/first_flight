@@ -27,36 +27,13 @@ class _SettingsPageState extends State<SettingsPage> {
   final _textFieldController = TextEditingController();
   final _editingController = TextEditingController();
 
-  final List<String> titles = [
-    "Email", 
-    "Language"
-  ];
-
   List<String> filteredItems = [];
   
   SharedPreferences? preferences;
   String defaultEmail = 'person@email.com';
   String email = 'person@email.com';
-  
-  void _clearMemory(String name){
 
-    List<String>? queuedData = preferences?.getStringList(name);
 
-    if (queuedData != null) {
-      queuedData = [];
-      preferences?.setStringList(name, queuedData);
-    }
-
-    setState(() {});
-  }
-
-  void filterSearchResults(String query) {
-    setState(() {
-      filteredItems = titles
-          .where((item) => item.toLowerCase().contains(query.toLowerCase()))
-          .toList();
-    });
-  }
   Future<void> initStorage() async {
     preferences = await SharedPreferences.getInstance();
     setState(() {
@@ -165,7 +142,7 @@ class _SettingsPageState extends State<SettingsPage> {
       subtitle: const Text("Clear all search history"),
       trailing: IconButton(
         icon: const Icon(Icons.delete_forever_sharp),
-        onPressed: () async {_clearMemory(HISTORY_KEY);},
+        onPressed: () async {await preferences?.remove(HISTORY_KEY);},
       )
     );
 
@@ -175,7 +152,7 @@ class _SettingsPageState extends State<SettingsPage> {
       subtitle: const Text("Clear all favorites"),
       trailing: IconButton(
         icon: const Icon(Icons.delete_forever_sharp),
-        onPressed: () async {_clearMemory(FAVORITES_KEY);},
+        onPressed: () async {await preferences?.remove(FAVORITES_KEY);},
       )
     );
 
