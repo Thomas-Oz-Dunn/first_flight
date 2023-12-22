@@ -106,7 +106,10 @@ var newsFeedBuilder = FutureBuilder<List<Article>>(
             var orbitTile = ListTile(
               // TODO-TD: fetch and display image
               onTap: () {_launchUrl(article.url);},
-              title: Text(article.title),
+              title: Text(
+                article.title,
+                style: TextStyle(fontWeight: FontWeight.bold,)
+              ),
               subtitle: Text('$summary\nSource: ${article.news_site}'),
               // TODO-TD: link related satellites
             );

@@ -83,9 +83,9 @@ class _MainPageState extends State<MainPage> {
   List<String> history = [];
   List<String> favorites = [];
 
-  // init the position using the user location
+  // // init the position using the user location, TODO toggle in settings
   // final mapController = MapController.withUserPosition(
-  //   trackUserLocation: UserTrackingOption(
+  //   trackUserLocation: const UserTrackingOption(
   //     enableTracking: true,
   //     unFollowUser: false,
   //   )
@@ -104,8 +104,9 @@ class _MainPageState extends State<MainPage> {
 
   @override
   void dispose() {
-    super.dispose();
+    // mapController.dispose();
     _searchController.dispose();
+    super.dispose();
   }
 
   Future<void> initStorage() async {
@@ -204,7 +205,8 @@ class _MainPageState extends State<MainPage> {
                   setState(() {
                     queryCelestrak(history[backIdx]);
                     _searchController.text = history[backIdx];
-                    currentPageIndex = 4;
+                    currentPageIndex = 3;
+                    // TODO-TD: reset to search page
                   }),
               child: const Text('Re-Search'),
             ),
@@ -258,47 +260,47 @@ class _MainPageState extends State<MainPage> {
       },
     );
 
-    // var OpenMap = OSMFlutter( 
-    //     controller: mapController,
-    //     osmOption: OSMOption(
-    //           userTrackingOption: UserTrackingOption(
-    //           enableTracking: true,
-    //           unFollowUser: false,
-    //         ),
-    //         zoomOption: ZoomOption(
-    //               initZoom: 8,
-    //               minZoomLevel: 3,
-    //               maxZoomLevel: 19,
-    //               stepZoom: 1.0,
-    //         ),
-    //         userLocationMarker: UserLocationMaker(
-    //             personMarker: MarkerIcon(
-    //                 icon: Icon(
-    //                     Icons.location_history_rounded,
-    //                     color: Colors.red,
-    //                     size: 48,
-    //                 ),
-    //             ),
-    //             directionArrowMarker: MarkerIcon(
-    //                 icon: Icon(
-    //                     Icons.double_arrow,
-    //                     size: 48,
-    //                 ),
+    // var openMap = OSMFlutter( 
+    //   controller: mapController,
+    //   osmOption: OSMOption(
+    //     userTrackingOption: const UserTrackingOption(
+    //       enableTracking: true,
+    //       unFollowUser: false,
+    //     ),
+    //     zoomOption: const ZoomOption(
+    //       initZoom: 8,
+    //       minZoomLevel: 3,
+    //       maxZoomLevel: 19,
+    //       stepZoom: 1.0,
+    //     ),
+    //     userLocationMarker: UserLocationMaker(
+    //         personMarker: const MarkerIcon(
+    //             icon: Icon(
+    //                 Icons.location_history_rounded,
+    //                 color: Colors.red,
+    //                 size: 48,
     //             ),
     //         ),
-    //         roadConfiguration: RoadOption(
-    //                 roadColor: Colors.yellowAccent,
+    //         directionArrowMarker: const MarkerIcon(
+    //           icon: Icon(
+    //               Icons.double_arrow,
+    //             size: 48,
+    //           ),
+    //       ),
+    //     ),
+    //     roadConfiguration: const RoadOption(
+    //       roadColor: Colors.yellowAccent,
+    //     ),
+    //     markerOption: MarkerOption(
+    //       defaultMarker: const MarkerIcon(
+    //         icon: Icon(
+    //           Icons.person_pin_circle,
+    //           color: Colors.blue,
+    //           size: 56,
     //         ),
-    //         markerOption: MarkerOption(
-    //             defaultMarker: MarkerIcon(
-    //                 icon: Icon(
-    //                   Icons.person_pin_circle,
-    //                   color: Colors.blue,
-    //                   size: 56,
-    //                 ),
-    //             )
-    //         ),
-    //     )
+    //       )
+    //     ),
+    //   )
     // );
 
     // map 

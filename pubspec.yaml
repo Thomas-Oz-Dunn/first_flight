@@ -49,7 +49,7 @@ flutter_native_splash:
   web: true
 
 flutter_launcher_icons:
-  image_path: "icon/LogoMk1.png" 
+  image_path: "icon/LogoMk2.png" 
   android: true
   ios: true
   remove_alpha_ios: true
