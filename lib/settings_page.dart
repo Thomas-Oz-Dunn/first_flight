@@ -142,7 +142,10 @@ class _SettingsPageState extends State<SettingsPage> {
       subtitle: const Text("Clear all search history"),
       trailing: IconButton(
         icon: const Icon(Icons.delete_forever_sharp),
-        onPressed: () async {await preferences?.remove(HISTORY_KEY);},
+        onPressed: () async {
+          await preferences?.remove(HISTORY_KEY);
+          setState(() {});
+        },
       )
     );
 
@@ -152,7 +155,10 @@ class _SettingsPageState extends State<SettingsPage> {
       subtitle: const Text("Clear all favorites"),
       trailing: IconButton(
         icon: const Icon(Icons.delete_forever_sharp),
-        onPressed: () async {await preferences?.remove(FAVORITES_KEY);},
+        onPressed: () async {
+          await preferences?.remove(FAVORITES_KEY); 
+          setState(() {});
+        },
       )
     );
 

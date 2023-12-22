@@ -36,6 +36,11 @@ class SecondFlightApp extends StatelessWidget {
               theme: themeNotifier.isDark
                 ? ThemeData(
                     brightness: Brightness.dark,
+                    primaryColor: Colors.black,
+                    colorScheme: const ColorScheme.highContrastDark(
+                      primary: Colors.black87,
+                      secondary: Color.fromARGB(255, 74, 20, 140)
+                    ),
                     useMaterial3: true
                   )
                 : ThemeData(
@@ -150,7 +155,7 @@ class _MainPageState extends State<MainPage> {
     preferences?.setStringList(FAVORITES_KEY, favorites);
     setState(() {});
   }
-  
+
   void _removeFromHistory(name) {
     history.remove(name);
     preferences?.setStringList(HISTORY_KEY, history);
@@ -303,17 +308,24 @@ class _MainPageState extends State<MainPage> {
     );
 
     var newsPage = Scaffold(
+      appBar: AppBar(title: Text('Space News')),
       body: newsFeedBuilder,
     );
     
     // view
     // TODO-TD: Interface with gyroscope for celestial sphere
-    const viewPage = Scaffold(
+    var homePage = Scaffold(
+      appBar: AppBar(
+        leading: settingsButton,
+        title: const Text('SaTrack'),
+        actions: [favoritesButton],
+      ),
       body: Center(child: Text('View Page TODO')),
     );
 
     // history
     var historyPage = Scaffold(
+      appBar: AppBar(title: Text('Search History')),
       body: historyListBuilder
     );
 
@@ -439,6 +451,18 @@ class _MainPageState extends State<MainPage> {
       appBar: AppBar(
         leading: null,
         title: searchBar,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.history),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => historyPage),
+              );
+            },
+          )
+        ],
       ),
       body: Scaffold(
         appBar: (_searchController.text != "") ? null : AppBar(
@@ -452,8 +476,7 @@ class _MainPageState extends State<MainPage> {
     var pages = <Widget>[
       mapPage,
       newsPage,
-      viewPage,
-      historyPage,
+      homePage,
       searchPage,
     ];
 
@@ -474,14 +497,9 @@ class _MainPageState extends State<MainPage> {
           label: 'News',
         ),
         NavigationDestination(
-          selectedIcon: Icon(Icons.satellite),
-          icon: Icon(Icons.satellite_outlined),
-          label: 'View',
-        ),
-        NavigationDestination(
-          selectedIcon: Icon(Icons.history),
-          icon: Icon(Icons.history_outlined),
-          label: 'History',
+          selectedIcon: Icon(Icons.home),
+          icon: Icon(Icons.home_outlined),
+          label: 'Home',
         ),
         NavigationDestination(
           selectedIcon: Icon(Icons.search), 
@@ -492,11 +510,6 @@ class _MainPageState extends State<MainPage> {
     );
         
     var mainPageLayout = Scaffold(
-      appBar: AppBar(
-        leading: settingsButton,
-        title: const Text('SaTrack'),
-        actions: [favoritesButton],
-      ),
       body: pages[currentPageIndex],
       bottomNavigationBar: navBar,
     );
