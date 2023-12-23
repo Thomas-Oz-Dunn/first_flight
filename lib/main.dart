@@ -88,14 +88,22 @@ class _MainPageState extends State<MainPage> {
     'Recent Launches',
     'Space Stations',
     '100 Brightest',
+    'Starlink',
   ];
-  
+
   List<String> exploreFlags = [
     'GROUP=last-30-days',
     'GROUP=stations',
-    'GROUP=visual'
+    'GROUP=visual',
+    'GROUP=starlink',
   ];
 
+  List<Color> exploreColors = [
+    Colors.blueGrey,
+    Colors.deepPurple,
+    Colors.blue.shade900,
+    Colors.white60
+  ];
   
   @override
   void initState() {
@@ -342,35 +350,38 @@ class _MainPageState extends State<MainPage> {
           } else if (snapshot.hasError) {
             return Text('${snapshot.error}');
           }
-          return const CircularProgressIndicator();
+
+          return const Center(child: CircularProgressIndicator());
         },
       );
 
       List<Widget> getExploreTiles(){
         return [
-          for (int i = 0; i<exploreTitles.length; i+= 1) 
+          for (int i = 0; i < exploreTitles.length; i += 1) 
             TextButton(
               style: TextButton.styleFrom(
-                backgroundColor: Colors.blueGrey,
+                backgroundColor: exploreColors[i],
                 shape: const RoundedRectangleBorder(
                   borderRadius: BorderRadius.all(Radius.circular(2)),
                 ),
               ),
               child: Text(exploreTitles[i]),
               onPressed: () {
-                setState(() {
-                  futureOrbits = fetchOrbits(
-                    '$celestrakSite${exploreFlags[i]}$celestrakJsonFormat'
+                futureOrbits = fetchOrbits(
+                  '$celestrakSite${exploreFlags[i]}$celestrakJsonFormat'
+                );
+                futureOrbits.then((value) {
+                  setState(() {});
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => Scaffold(
+                        appBar: AppBar(title: Text(exploreTitles[i])),
+                        body: searchResultsBuilder,
+                      )
+                    ),
                   );
-                });
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => Scaffold(
-                      appBar: AppBar(title: Text(exploreTitles[i])),
-                      body: searchResultsBuilder,
-                    )
-                  ),
+                }
                 );
               },
             ),
@@ -381,6 +392,7 @@ class _MainPageState extends State<MainPage> {
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: GridView(
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          mainAxisSpacing: 20,
           crossAxisCount: 2, 
           crossAxisSpacing: 10,
           childAspectRatio: 2,
