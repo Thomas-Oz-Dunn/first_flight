@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
@@ -100,27 +99,6 @@ class Orbit {
 
 }
 
-
-// class Pass{
-//   final String objectName;
-//   final start_datetime;
-//   final duration;
-//   final eci_start;
-//   final eci_stop;
-
-
-//   const Pass({
-//     required this.objectName,
-//   })
-
-//   calc_azel
-
-//   calc_latlon 
-
-// };
-
-
-// Calc next passes (lat lon, datetime, search window)
 
 Future<List<Orbit>> fetchOrbits(String url) async {
   final response = await http.get(Uri.parse(url));

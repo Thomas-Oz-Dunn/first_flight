@@ -253,80 +253,70 @@ class _MainPageState extends State<MainPage> {
       },
     );
 
-    // map 
-    // TODO-TD: add orbits in `view` list trajectories
-    // TODO-TD: Open street map of location and overpasses of favorites or view
+    bool lightPollution = true;
+
+    const List<(Color?, Color? background, ShapeBorder?)> customizations =
+        <(Color?, Color?, ShapeBorder?)>[
+      (null, Colors.black, null), 
+      (null, Colors.purple, null),
+    ];
+
+    int index = 0; 
+
+    // TODO-TD: `map` calculates and redirects here
+    // TODO-TD: Open street map of location and overpasses of favorites
     var mapPage = FlutterMap(
       options: MapOptions(
         initialCenter: defaultLatLon,
         initialZoom: 4
       ),
       children: [
+        FloatingActionButton(
+          onPressed: () {
+            setState(() {
+              if (lightPollution){
+                lightPollution = false;
+              } else {
+                lightPollution = true;
+              }
+              index = (index + 1) % customizations.length;
+            });
+          },
+          foregroundColor: customizations[index].$1,
+          backgroundColor: customizations[index].$2,
+          shape: customizations[index].$3,
+          child: const Icon(Icons.lightbulb),
+
+      ),
+        // OverlayImageLayer(
+        //   overlayImages: [
+        //     OverlayImage(
+        //       opacity: lightPollution ? 0.5 : 0,
+        //       bounds: LatLngBounds(
+        //         LatLng(90, -180),
+        //         LatLng(-90, 180),
+        //       ),
+        //       imageProvider: const NetworkImage(
+        //         'https://djlorenz.github.io/astronomy/lp2022/world2022_low3.png'
+        //       ),
+        //     ),
+        //   ],
+        // ),
         TileLayer(
           urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
           userAgentPackageName: 'com.example.app',
         ),
-         RichAttributionWidget(
+        RichAttributionWidget(
         attributions: [
           TextSourceAttribution(
             'OpenStreetMap contributors',
-            onTap: () => launchUrl(Uri.parse('https://openstreetmap.org/copyright')),
+            onTap: () => launchUrl(
+              Uri.parse('https://openstreetmap.org/copyright')
+            ),
           ),
         ],
       ),
     ],
-    );
-
-    var newsButtonOptions = [
-      MenuItemButton(
-        onPressed: () =>
-            setState(() {
-              newsDays = 1;
-            }),
-        child: const Text('Past 24 hours'),
-      ),
-      MenuItemButton(
-        onPressed: () => 
-          setState(() {
-            newsDays = 2;
-            // TODO-TD: Update body
-          }),        
-        child: const Text('Past 48 hours'),
-      ),
-    ];
-    
-    var newsPage = Scaffold(
-      appBar: AppBar(
-        title: const Text("What's new"),
-        actions: [
-          MenuAnchor(
-            menuChildren: newsButtonOptions,
-            builder:
-              (
-                BuildContext context, 
-                MenuController newsController, 
-                Widget? child
-              ) {
-                var menuButton = IconButton(
-                  icon: const Icon(Icons.timelapse),
-                  onPressed: () {
-                    if (newsController.isOpen) {
-                      newsController.close();
-                      setState(() {querySpaceNews();});
-                    } else {
-                      newsController.open();
-                    }
-                  },
-                );
-              return menuButton;
-            }
-          )
-        ],
-      ),
-      body: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20.0),
-        child: newsFeedBuilder,
-      )
     );
     
     // view
@@ -558,7 +548,7 @@ class _MainPageState extends State<MainPage> {
 
     var pages = <Widget>[
       mapPage,
-      newsPage,
+      const NewsPage(),
       homePage,
       searchPage,
     ];

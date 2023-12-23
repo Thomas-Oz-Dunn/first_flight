@@ -10,7 +10,7 @@ class Article{
   final int id;
   final String title;
   final String url;
-  final String image_url;
+  final String imageUrl;
   final String news_site;
   final String summary;
   
@@ -24,7 +24,7 @@ class Article{
     required this.id,
     required this.title,
     required this.url,
-    required this.image_url,
+    required this.imageUrl,
     required this.news_site,
     required this.summary,
   });
@@ -43,7 +43,7 @@ class Article{
           id: id,
           title: title,
           url: url,
-          image_url: image_url,
+          imageUrl: image_url,
           news_site: news_site,
           summary: summary,
         ),
@@ -83,6 +83,7 @@ Future<void> _launchUrl(String _url) async {
     throw Exception('Could not launch $_url');
   }
 }
+
 var newsFeedBuilder = FutureBuilder<List<Article>>(
   future: querySpaceNews(),
   builder: (context, snapshot) {
@@ -114,7 +115,7 @@ var newsFeedBuilder = FutureBuilder<List<Article>>(
                   maxWidth: 100,
                   maxHeight: 100,
                 ),
-                child: Image.network(article.image_url, fit: BoxFit.cover),
+                child: Image.network(article.imageUrl, fit: BoxFit.cover),
               ),
               onTap: () {_launchUrl(article.url);},
               title: Text(
@@ -123,7 +124,7 @@ var newsFeedBuilder = FutureBuilder<List<Article>>(
               ),
               subtitle: Text('$summary\nSource: ${article.news_site}'),
               trailing: IconButton(
-                icon: Icon(Icons.ios_share), 
+                icon: Icon(Icons.share), 
                 onPressed: () {
                   Share.share('${article.news_site}: ${article.title} ${article.url}');
               },
@@ -142,3 +143,77 @@ var newsFeedBuilder = FutureBuilder<List<Article>>(
     return const CircularProgressIndicator();
   },
 );
+
+class NewsPage extends StatefulWidget {
+  const NewsPage({super.key});
+
+  @override
+  State<NewsPage> createState() => _NewsPageState();
+
+}
+class _NewsPageState extends State<NewsPage> {
+
+  @override
+  void initState(){
+    querySpaceNews();
+    super.initState();
+  }
+
+  @override
+  Widget build(context){
+    var newsButtonOptions = [
+      MenuItemButton(
+        onPressed: () =>
+            setState(() {
+              newsDays = 1;
+            }),
+        child: const Text('Past 24 hours'),
+      ),
+      MenuItemButton(
+        onPressed: () => 
+          setState(() {
+            newsDays = 2;
+            // TODO-TD: Update body
+          }),        
+        child: const Text('Past 48 hours'),
+      ),
+    ];
+    
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text("What's new"),
+        actions: [
+          MenuAnchor(
+            menuChildren: newsButtonOptions,
+            builder:
+              (
+                BuildContext context, 
+                MenuController newsController, 
+                Widget? child
+              ) {
+                var menuButton = IconButton(
+                  icon: const Icon(Icons.timelapse),
+                  onPressed: () {
+                    if (newsController.isOpen) {
+                      newsController.close();
+                      setState(() {
+                        querySpaceNews();
+                      });
+                    } else {
+                      newsController.open();
+                    }
+                  },
+                );
+              return menuButton;
+            }
+          )
+        ],
+      ),
+      body: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20.0),
+        child: newsFeedBuilder,
+      )
+    );
+  }
+
+}
