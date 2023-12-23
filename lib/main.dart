@@ -1,9 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:flutter_map/flutter_map.dart';
-import 'package:url_launcher/url_launcher.dart';
-import 'package:latlong2/latlong.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -12,6 +8,7 @@ import 'theme_handle.dart';
 import 'settings_page.dart';
 import 'orbit_page.dart';
 import 'news_page.dart';
+import 'map_page.dart';
 
 
 const FAVORITES_KEY = "Favorites";
@@ -77,9 +74,6 @@ class _MainPageState extends State<MainPage> {
   String celestrakName = "NAME=";
   String celestrakJsonFormat = "&FORMAT=JSON";
   bool emptySearchbar = true;
-  
-  late Future<Position> futurePosition;
-  LatLng defaultLatLon = LatLng(0, 0);
 
   final TextEditingController _searchController = TextEditingController();
   int defaultPageIndex = 2;
@@ -97,12 +91,6 @@ class _MainPageState extends State<MainPage> {
     initStorage();
 
     futureOrbits = queryCelestrak('ISS');
-    
-    futurePosition = Geolocator.getCurrentPosition(
-      desiredAccuracy: LocationAccuracy.high
-    );
-  // init the position using the user location, TODO toggle in settings
-    futurePosition.then((value) => defaultLatLon = LatLng(value.latitude, value.longitude));
 
     super.initState();
   }
@@ -253,71 +241,6 @@ class _MainPageState extends State<MainPage> {
       },
     );
 
-    bool lightPollution = true;
-
-    const List<(Color?, Color? background, ShapeBorder?)> customizations =
-        <(Color?, Color?, ShapeBorder?)>[
-      (null, Colors.black, null), 
-      (null, Colors.purple, null),
-    ];
-
-    int index = 0; 
-
-    // TODO-TD: `map` calculates and redirects here
-    // TODO-TD: Open street map of location and overpasses of favorites
-    var mapPage = FlutterMap(
-      options: MapOptions(
-        initialCenter: defaultLatLon,
-        initialZoom: 4
-      ),
-      children: [
-        FloatingActionButton(
-          onPressed: () {
-            setState(() {
-              if (lightPollution){
-                lightPollution = false;
-              } else {
-                lightPollution = true;
-              }
-              index = (index + 1) % customizations.length;
-            });
-          },
-          foregroundColor: customizations[index].$1,
-          backgroundColor: customizations[index].$2,
-          shape: customizations[index].$3,
-          child: const Icon(Icons.lightbulb),
-
-      ),
-        // OverlayImageLayer(
-        //   overlayImages: [
-        //     OverlayImage(
-        //       opacity: lightPollution ? 0.5 : 0,
-        //       bounds: LatLngBounds(
-        //         LatLng(90, -180),
-        //         LatLng(-90, 180),
-        //       ),
-        //       imageProvider: const NetworkImage(
-        //         'https://djlorenz.github.io/astronomy/lp2022/world2022_low3.png'
-        //       ),
-        //     ),
-        //   ],
-        // ),
-        TileLayer(
-          urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-          userAgentPackageName: 'com.example.app',
-        ),
-        RichAttributionWidget(
-        attributions: [
-          TextSourceAttribution(
-            'OpenStreetMap contributors',
-            onTap: () => launchUrl(
-              Uri.parse('https://openstreetmap.org/copyright')
-            ),
-          ),
-        ],
-      ),
-    ],
-    );
     
     // view
     // TODO-TD: Interface with gyroscope for celestial sphere
@@ -547,7 +470,7 @@ class _MainPageState extends State<MainPage> {
     );
 
     var pages = <Widget>[
-      mapPage,
+      const MapPage(),
       const NewsPage(),
       homePage,
       searchPage,
