@@ -96,13 +96,37 @@ class Orbit {
       _ => throw FormatException('Failed to load: $json'),
     };
   }
+
+
 }
+
+
+// class Pass{
+//   final String objectName;
+//   final start_datetime;
+//   final duration;
+//   final eci_start;
+//   final eci_stop;
+
+
+//   const Pass({
+//     required this.objectName,
+//   })
+
+//   calc_azel
+
+//   calc_latlon 
+
+// };
+
+
+// Calc next passes (lat lon, datetime, search window)
 
 Future<List<Orbit>> fetchOrbits(String url) async {
   final response = await http.get(Uri.parse(url));
-      int nameIdx = url.indexOf('NAME=');
-      int formatIdx = url.indexOf('&FORMAT');
-      String name = url.substring(nameIdx+5, formatIdx);
+  int nameIdx = url.indexOf('NAME=');
+  int formatIdx = url.indexOf('&FORMAT');
+  String name = url.substring(nameIdx+5, formatIdx);
       
   if (response.statusCode == 200) {
     if (response.body.toString() == 'No GP data found'){
@@ -142,7 +166,7 @@ class OrbitPage extends StatelessWidget {
           const Divider(),
           const Row(
             mainAxisAlignment: MainAxisAlignment.end,
-            children: [Text('TODO: Favorite, Share, Notify Buttons')]
+            children: [Text('TODO: View, Favorite, Share, Notify Buttons')]
           ),
           const Divider(),
           const Text('Next Passes List: TODO'), 

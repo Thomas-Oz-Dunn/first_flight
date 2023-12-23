@@ -4,20 +4,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 const FAVORITES_KEY = "Favorites";
 
 class FavoritesPage extends StatefulWidget {
-// Favorites page 
-    // + button in bottom right to add new
-      // Pop up window to enter fields
-
-    // Search bar
-    // scroll
-      // each list member
-        // Title
-        // Metadata (next time)
-        // triple dot
-          // share
-          // delete
-        // single tap load trajector in main
-        // hold click to reorder
   const FavoritesPage({super.key});
 
   @override
@@ -26,6 +12,7 @@ class FavoritesPage extends StatefulWidget {
 
 class _FavoritesPageState extends State<FavoritesPage> {
   SharedPreferences? preferences;
+
   List<String> _allFavoritesList = [];
   List<String> _filteredFavoritesList = [];
 
@@ -124,7 +111,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
                   setState(() {
                     // TODO-TD: store list of orbits being viewed
                   }),
-              child: const Text('View'),
+              child: const Text('Map'),
             ),
             MenuItemButton(
               onPressed: () => 

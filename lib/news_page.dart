@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
-
+import 'package:share_plus/share_plus.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
+int newsDays = 2;
 
 class Article{
   final int id;
@@ -56,8 +57,8 @@ Future<List<Article>> querySpaceNews() async {
   // TODO-TD: toggle look back time
   String spaceFlightNews = "http://api.spaceflightnewsapi.net/v4/articles/?published_at_gte=";
   final now = DateTime.now();
-  final yesterday = '${now.year.toString()}-${now.month.toString()}-${(now.day-1).toString()}';
-  final response = await http.get(Uri.parse(spaceFlightNews + yesterday));
+  final past = '${now.year.toString()}-${now.month.toString()}-${(now.day-newsDays).toString()}';
+  final response = await http.get(Uri.parse(spaceFlightNews + past));
       
   if (response.statusCode == 200) {
     Map<String, dynamic> decoded = json.decode(response.body) as Map<String, dynamic>;
@@ -85,35 +86,52 @@ Future<void> _launchUrl(String _url) async {
 var newsFeedBuilder = FutureBuilder<List<Article>>(
   future: querySpaceNews(),
   builder: (context, snapshot) {
-    int ellipseStart = 200;
+    int ellipseCharStart = 200;
 
     if (snapshot.hasData) {
       List<Article> articles = snapshot.data!;
       return ListView.builder(
+        padding: const EdgeInsets.symmetric(vertical: 12.0),
         itemBuilder: (context, itemIdxs) {
           if (itemIdxs < articles.length) {
             Article article = articles[itemIdxs];
             String summary = article.summary;
 
-            if (summary.length > ellipseStart){
+            if (summary.length > ellipseCharStart){
               summary = summary.replaceRange(
-                ellipseStart, 
+                ellipseCharStart, 
                 summary.length, 
                 '...'
               );
             }
 
-            var orbitTile = ListTile(
-              // TODO-TD: fetch and display image
+            var newsTile = ListTile(
+              contentPadding: EdgeInsets.symmetric(vertical: 8),
+              leading: ConstrainedBox(
+                constraints: const BoxConstraints(
+                  minWidth: 50,
+                  minHeight: 50,
+                  maxWidth: 100,
+                  maxHeight: 100,
+                ),
+                child: Image.network(article.image_url, fit: BoxFit.cover),
+              ),
               onTap: () {_launchUrl(article.url);},
               title: Text(
                 article.title,
                 style: TextStyle(fontWeight: FontWeight.bold,)
               ),
               subtitle: Text('$summary\nSource: ${article.news_site}'),
-              // TODO-TD: link related satellites
+              trailing: IconButton(
+                icon: Icon(Icons.ios_share), 
+                onPressed: () {
+                  Share.share('${article.news_site}: ${article.title} ${article.url}');
+              },
+              ),
+              // TODO-TD: link related satellites to each article
+
             );
-            return orbitTile;
+            return newsTile;
           }
       }
     );

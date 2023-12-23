@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:latlong2/latlong.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
-// import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'favorites_page.dart';
@@ -39,7 +42,9 @@ class SecondFlightApp extends StatelessWidget {
                     primaryColor: Colors.black,
                     colorScheme: const ColorScheme.highContrastDark(
                       primary: Colors.black87,
-                      secondary: Color.fromARGB(255, 74, 20, 140)
+                      primaryContainer: Colors.black45,
+                      secondary: Color.fromARGB(255, 74, 20, 140),
+                      secondaryContainer: Color.fromARGB(255, 55, 71, 79),
                     ),
                     useMaterial3: true
                   )
@@ -67,14 +72,16 @@ class MainPage extends StatefulWidget {
 
 class _MainPageState extends State<MainPage> {
   late Future<List<Orbit>> futureOrbits;
+
   String celestrakSite = "https://celestrak.org/NORAD/elements/gp.php?";
   String celestrakName = "NAME=";
-  String celestrakRecent = "GROUP=last-30-days";
   String celestrakJsonFormat = "&FORMAT=JSON";
-  late String recentLaunchApi;
+  bool emptySearchbar = true;
   
-  final TextEditingController _searchController = TextEditingController();
+  late Future<Position> futurePosition;
+  LatLng defaultLatLon = LatLng(0, 0);
 
+  final TextEditingController _searchController = TextEditingController();
   int defaultPageIndex = 2;
   int currentPageIndex = 2;
 
@@ -83,28 +90,25 @@ class _MainPageState extends State<MainPage> {
   List<String> history = [];
   List<String> favorites = [];
 
-  // // init the position using the user location, TODO toggle in settings
-  // final mapController = MapController.withUserPosition(
-  //   trackUserLocation: const UserTrackingOption(
-  //     enableTracking: true,
-  //     unFollowUser: false,
-  //   )
-  // );
   
   @override
   void initState() {
     FlutterNativeSplash.remove();
     initStorage();
 
-    recentLaunchApi = celestrakSite + celestrakRecent + celestrakJsonFormat;
-    futureOrbits = fetchOrbits(recentLaunchApi);
+    futureOrbits = queryCelestrak('ISS');
     
+    futurePosition = Geolocator.getCurrentPosition(
+      desiredAccuracy: LocationAccuracy.high
+    );
+  // init the position using the user location, TODO toggle in settings
+    futurePosition.then((value) => defaultLatLon = LatLng(value.latitude, value.longitude));
+
     super.initState();
   }
 
   @override
   void dispose() {
-    // mapController.dispose();
     _searchController.dispose();
     super.dispose();
   }
@@ -194,7 +198,6 @@ class _MainPageState extends State<MainPage> {
         },
       );
       
-    // TODO-TD: Add search bar to filter history list
     var historyListBuilder = ListView.builder(
       itemBuilder: (context, itemIdxs) {
         if (itemIdxs < history.length) {
@@ -206,26 +209,16 @@ class _MainPageState extends State<MainPage> {
                     queryCelestrak(history[backIdx]);
                     _searchController.text = history[backIdx];
                     currentPageIndex = 3;
-                    // TODO-TD: reset to search page
+                    Navigator.pop(context);
+                    // TODO-TD: reset view to search page
                   }),
               child: const Text('Re-Search'),
-            ),
-            MenuItemButton(
-              onPressed: () =>
-                  setState(() {
-                    // TODO-TD: store list of orbits being viewed
-                  }),
-              child: const Text('View'),
-            ),
-            MenuItemButton(
-              onPressed: () => 
-                setState(() {_addFavorite(history[backIdx]);}),
-              child: const Text('Favorite'),
             ),
             MenuItemButton(
               onPressed: () => 
                 setState(() {
                   _removeFromHistory(history[backIdx]);
+                  // TODO-TD: refresh view of page
                 }),
               child: const Text('Remove'),
             ),
@@ -260,58 +253,80 @@ class _MainPageState extends State<MainPage> {
       },
     );
 
-    // var openMap = OSMFlutter( 
-    //   controller: mapController,
-    //   osmOption: OSMOption(
-    //     userTrackingOption: const UserTrackingOption(
-    //       enableTracking: true,
-    //       unFollowUser: false,
-    //     ),
-    //     zoomOption: const ZoomOption(
-    //       initZoom: 8,
-    //       minZoomLevel: 3,
-    //       maxZoomLevel: 19,
-    //       stepZoom: 1.0,
-    //     ),
-    //     userLocationMarker: UserLocationMaker(
-    //         personMarker: const MarkerIcon(
-    //             icon: Icon(
-    //                 Icons.location_history_rounded,
-    //                 color: Colors.red,
-    //                 size: 48,
-    //             ),
-    //         ),
-    //         directionArrowMarker: const MarkerIcon(
-    //           icon: Icon(
-    //               Icons.double_arrow,
-    //             size: 48,
-    //           ),
-    //       ),
-    //     ),
-    //     roadConfiguration: const RoadOption(
-    //       roadColor: Colors.yellowAccent,
-    //     ),
-    //     markerOption: MarkerOption(
-    //       defaultMarker: const MarkerIcon(
-    //         icon: Icon(
-    //           Icons.person_pin_circle,
-    //           color: Colors.blue,
-    //           size: 56,
-    //         ),
-    //       )
-    //     ),
-    //   )
-    // );
-
     // map 
+    // TODO-TD: add orbits in `view` list trajectories
     // TODO-TD: Open street map of location and overpasses of favorites or view
-    const mapPage = Scaffold(
-      body: Center( child: Text('Map Page TODO')),
+    var mapPage = FlutterMap(
+      options: MapOptions(
+        initialCenter: defaultLatLon,
+        initialZoom: 4
+      ),
+      children: [
+        TileLayer(
+          urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+          userAgentPackageName: 'com.example.app',
+        ),
+         RichAttributionWidget(
+        attributions: [
+          TextSourceAttribution(
+            'OpenStreetMap contributors',
+            onTap: () => launchUrl(Uri.parse('https://openstreetmap.org/copyright')),
+          ),
+        ],
+      ),
+    ],
     );
 
+    var newsButtonOptions = [
+      MenuItemButton(
+        onPressed: () =>
+            setState(() {
+              newsDays = 1;
+            }),
+        child: const Text('Past 24 hours'),
+      ),
+      MenuItemButton(
+        onPressed: () => 
+          setState(() {
+            newsDays = 2;
+            // TODO-TD: Update body
+          }),        
+        child: const Text('Past 48 hours'),
+      ),
+    ];
+    
     var newsPage = Scaffold(
-      appBar: AppBar(title: Text('Space News')),
-      body: newsFeedBuilder,
+      appBar: AppBar(
+        title: const Text("What's new"),
+        actions: [
+          MenuAnchor(
+            menuChildren: newsButtonOptions,
+            builder:
+              (
+                BuildContext context, 
+                MenuController newsController, 
+                Widget? child
+              ) {
+                var menuButton = IconButton(
+                  icon: const Icon(Icons.timelapse),
+                  onPressed: () {
+                    if (newsController.isOpen) {
+                      newsController.close();
+                      setState(() {querySpaceNews();});
+                    } else {
+                      newsController.open();
+                    }
+                  },
+                );
+              return menuButton;
+            }
+          )
+        ],
+      ),
+      body: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20.0),
+        child: newsFeedBuilder,
+      )
     );
     
     // view
@@ -327,7 +342,7 @@ class _MainPageState extends State<MainPage> {
 
     // history
     var historyPage = Scaffold(
-      appBar: AppBar(title: Text('Search History')),
+      appBar: AppBar(title: const Text('Search History')),
       body: historyListBuilder
     );
 
@@ -343,9 +358,9 @@ class _MainPageState extends State<MainPage> {
                   MenuItemButton(
                     onPressed: () =>
                         setState(() {
-                          // TODO-TD: store list of orbits to be viewed
+                          // TODO-TD: store list of orbits to be viewed and mapped
                         }),
-                    child: const Text('View'),
+                    child: const Text('Map'),
                   ),
                   MenuItemButton(
                     onPressed: () => 
@@ -406,6 +421,75 @@ class _MainPageState extends State<MainPage> {
         },
       );
 
+    var exploreTiles = Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: GridView(
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2, 
+          crossAxisSpacing: 10,
+          childAspectRatio: 2,
+        ),
+        children: [
+          // TODO-TD: autoscale from list of categories 
+          TextButton(
+            style: TextButton.styleFrom(
+              backgroundColor: Colors.blueGrey,
+              shape: const RoundedRectangleBorder(
+                borderRadius: BorderRadius.all(Radius.circular(2)),
+              ),
+            ),
+            child: const Text('Recent Launches'),
+            onPressed: () {
+              setState(() {
+                futureOrbits = fetchOrbits(
+                  '${celestrakSite}GROUP=last-30-days$celestrakJsonFormat'
+                );
+              });
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => Scaffold(
+                    appBar: AppBar(title: const Text("Recent Launches")),
+                    body: searchResultsBuilder,
+                  )
+                ),
+              );
+            },
+          ),
+          TextButton(
+            style: TextButton.styleFrom(
+              backgroundColor: Colors.deepPurple,
+              shape: const RoundedRectangleBorder(
+                borderRadius: BorderRadius.all(Radius.circular(2)),
+              ),
+            ),
+            child: const Text('Space Stations'),
+            onPressed: () {
+              setState(() {
+                futureOrbits = fetchOrbits(
+                  '${celestrakSite}GROUP=stations$celestrakJsonFormat'
+                );
+              });
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => Scaffold(
+                    appBar: AppBar(title: const Text("Space Stations")),
+                    body: searchResultsBuilder,
+                  )
+                ),
+              );
+            },
+          ),
+        ]
+      )
+    );
+
+    var searchpageBody = Scaffold(
+      appBar: null,
+      body: emptySearchbar ? exploreTiles : searchResultsBuilder,
+    );
+
     var searchBar = Container(
       height: 40,
       decoration: BoxDecoration(borderRadius: BorderRadius.circular(5)),
@@ -416,11 +500,12 @@ class _MainPageState extends State<MainPage> {
             icon: const Icon(Icons.search_rounded),
             onPressed: () {
               if (_searchController.text != ""){
+                emptySearchbar = false;
                 _addToHistory(_searchController.text);
                 queryCelestrak(_searchController.text);
               } else {
                 setState(() {
-                  futureOrbits = fetchOrbits(recentLaunchApi);
+                  emptySearchbar = true;
                 });
               }
             },
@@ -431,7 +516,7 @@ class _MainPageState extends State<MainPage> {
             onPressed: () {
               setState(() {
                 _searchController.text = ""; 
-                futureOrbits = fetchOrbits(recentLaunchApi);
+                emptySearchbar = true;
               });
             }
           ),
@@ -439,9 +524,10 @@ class _MainPageState extends State<MainPage> {
         onSubmitted: (value) { 
           if (value.trim() == ""){
             setState(() {
-              futureOrbits = fetchOrbits(recentLaunchApi);
+              emptySearchbar = true;
             });
           } else {
+            emptySearchbar = false;
             _addToHistory(value);
             queryCelestrak(value);
           }
@@ -449,30 +535,25 @@ class _MainPageState extends State<MainPage> {
         ),
       );
 
+    var historyButton = IconButton(
+      icon: const Icon(Icons.history),
+      onPressed: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => historyPage
+          ),
+        );
+      },
+    );
+
     var searchPage = Scaffold(
       appBar: AppBar(
         leading: null,
         title: searchBar,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.history),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => historyPage),
-              );
-            },
-          )
-        ],
+        actions: [historyButton],
       ),
-      body: Scaffold(
-        appBar: (_searchController.text != "") ? null : AppBar(
-          title: const Text('Most Recent Launches'), 
-          automaticallyImplyLeading: false,
-        ),
-        body: searchResultsBuilder,
-      )
+      body: searchpageBody,
     );
 
     var pages = <Widget>[
