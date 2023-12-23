@@ -84,6 +84,18 @@ class _MainPageState extends State<MainPage> {
   List<String> history = [];
   List<String> favorites = [];
 
+  List<String> exploreTitles = [
+    'Recent Launches',
+    'Space Stations',
+    '100 Brightest',
+  ];
+  
+  List<String> exploreFlags = [
+    'GROUP=last-30-days',
+    'GROUP=stations',
+    'GROUP=visual'
+  ];
+
   
   @override
   void initState() {
@@ -334,6 +346,37 @@ class _MainPageState extends State<MainPage> {
         },
       );
 
+      List<Widget> getExploreTiles(){
+        return [
+          for (int i = 0; i<exploreTitles.length; i+= 1) 
+            TextButton(
+              style: TextButton.styleFrom(
+                backgroundColor: Colors.blueGrey,
+                shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(2)),
+                ),
+              ),
+              child: Text(exploreTitles[i]),
+              onPressed: () {
+                setState(() {
+                  futureOrbits = fetchOrbits(
+                    '$celestrakSite${exploreFlags[i]}$celestrakJsonFormat'
+                  );
+                });
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => Scaffold(
+                      appBar: AppBar(title: Text(exploreTitles[i])),
+                      body: searchResultsBuilder,
+                    )
+                  ),
+                );
+              },
+            ),
+        ];
+      }
+
     var exploreTiles = Container(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: GridView(
@@ -342,59 +385,7 @@ class _MainPageState extends State<MainPage> {
           crossAxisSpacing: 10,
           childAspectRatio: 2,
         ),
-        children: [
-          // TODO-TD: autoscale from list of categories 
-          TextButton(
-            style: TextButton.styleFrom(
-              backgroundColor: Colors.blueGrey,
-              shape: const RoundedRectangleBorder(
-                borderRadius: BorderRadius.all(Radius.circular(2)),
-              ),
-            ),
-            child: const Text('Recent Launches'),
-            onPressed: () {
-              setState(() {
-                futureOrbits = fetchOrbits(
-                  '${celestrakSite}GROUP=last-30-days$celestrakJsonFormat'
-                );
-              });
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => Scaffold(
-                    appBar: AppBar(title: const Text("Recent Launches")),
-                    body: searchResultsBuilder,
-                  )
-                ),
-              );
-            },
-          ),
-          TextButton(
-            style: TextButton.styleFrom(
-              backgroundColor: Colors.deepPurple,
-              shape: const RoundedRectangleBorder(
-                borderRadius: BorderRadius.all(Radius.circular(2)),
-              ),
-            ),
-            child: const Text('Space Stations'),
-            onPressed: () {
-              setState(() {
-                futureOrbits = fetchOrbits(
-                  '${celestrakSite}GROUP=stations$celestrakJsonFormat'
-                );
-              });
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => Scaffold(
-                    appBar: AppBar(title: const Text("Space Stations")),
-                    body: searchResultsBuilder,
-                  )
-                ),
-              );
-            },
-          ),
-        ]
+        children: getExploreTiles()
       )
     );
 
