@@ -6,11 +6,11 @@ publish_to: 'none'
 version: 1.0.0+1
 
 environment:
-  sdk: '>=3.0.0'
+  sdk: '>=3.2.0'
 
 dependencies:
   flutter:
-    sdk: flutter
+    sdk: flutter 
   shared_preferences:  ^2.2.2
   camera: ^0.10.5
   geolocator: ^9.0.0

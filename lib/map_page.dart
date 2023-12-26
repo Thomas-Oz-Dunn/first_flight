@@ -103,7 +103,6 @@ Image projectMercator(
   Image image,
   LatLngBounds bounds, 
 ) {
-    final rEarth = 6378;
     final w = image.width! - 1;
     final h = image.height! - 1;
     final cx = image.width! ~/ 2;
@@ -114,6 +113,8 @@ Image projectMercator(
     final latCenter = bounds.center.latitude;
     final lonCenter = bounds.center.longitude;
 
+
+  // pixel to km 
 
   // deg / pixel vert horiz
   // lat = y_km / R_earth + latCenter

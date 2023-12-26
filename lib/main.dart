@@ -3,6 +3,9 @@ import 'package:provider/provider.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:first_flight/src/rust/api/simple.dart';
+import 'package:first_flight/src/rust/frb_generated.dart';
+
 import 'favorites_page.dart';
 import 'theme_handle.dart';
 import 'settings_page.dart';
@@ -16,9 +19,10 @@ const HISTORY_KEY = "History";
 
 enum SampleItem { load, favorite, remove, share }
 
-void main() {
+void main() async {
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
+  await RustLib.init();
   runApp(const SecondFlightApp());
 }
 
@@ -68,6 +72,7 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPageState extends State<MainPage> {
+  List<Orbit> emptyOrbits = [];
   late Future<List<Orbit>> futureOrbits;
 
   String celestrakSite = "https://celestrak.org/NORAD/elements/gp.php?";
@@ -109,9 +114,7 @@ class _MainPageState extends State<MainPage> {
   void initState() {
     FlutterNativeSplash.remove();
     initStorage();
-
-    futureOrbits = queryCelestrak('ISS');
-
+    futureOrbits = Future.value(emptyOrbits);
     super.initState();
   }
 
@@ -218,7 +221,6 @@ class _MainPageState extends State<MainPage> {
                     _searchController.text = history[backIdx];
                     currentPageIndex = 3;
                     Navigator.pop(context);
-                    // TODO-TD: reset view to search page
                   }),
               child: const Text('Re-Search'),
             ),
@@ -367,20 +369,23 @@ class _MainPageState extends State<MainPage> {
               ),
               child: Text(exploreTitles[i]),
               onPressed: () {
-                futureOrbits = fetchOrbits(
+                futureOrbits = Future.value(emptyOrbits);
+                fetchOrbits(
                   '$celestrakSite${exploreFlags[i]}$celestrakJsonFormat'
-                );
-                futureOrbits.then((value) {
-                  setState(() {});
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => Scaffold(
-                        appBar: AppBar(title: Text(exploreTitles[i])),
-                        body: searchResultsBuilder,
-                      )
-                    ),
-                  );
+                ).then(
+                  (value) {
+                    setState(() {
+                      futureOrbits = Future.value(value);
+                    });
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => Scaffold(
+                          appBar: AppBar(title: Text(exploreTitles[i])),
+                          body: searchResultsBuilder,
+                        )
+                      ),
+                    );
                 }
                 );
               },
