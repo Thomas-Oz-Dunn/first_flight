@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
+import 'package:first_flight/src/rust/api/simple.dart';
+import 'package:latlong2/latlong.dart';
+
 class Orbit {
   final String objectName;
   final String objectID;
@@ -97,6 +100,10 @@ class Orbit {
   }
 
 
+}
+
+List<LatLng> LatLngTrajectory(Orbit orbit, DateTime dateTime, double hrDuration){
+  final x = calc_overhead_passes();
 }
 
 
