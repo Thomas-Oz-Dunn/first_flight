@@ -1,3 +1,4 @@
+import 'package:first_flight/src/rust/src/api/overhead_pass.rs';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
