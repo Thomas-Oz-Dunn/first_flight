@@ -1,9 +1,9 @@
-use sgp4;
+use sgp4::{Constants, Elements};
 use nalgebra::{Matrix3, Vector3};
-use chrono::{DateTime, Timelike, Datelike, Utc, NaiveDate, NaiveTime, NaiveDateTime, Duration};
-use parse_tle::tle;
-use clap::{Parser, Args};
+use chrono::{DateTime, Timelike, Datelike, Utc, NaiveDateTime, Duration};
 use std::f64::consts::PI;
+
+/// Constants
 
 pub const RADIUS_EQUATOR: f64 = 6.378137e6; // m
 pub const SURFACE_ECC: f64 = 0.08182;
@@ -11,7 +11,9 @@ pub const ROT_RATE: f64 = 7.2921150e-5;
 pub const AXIAL_TILT: f64 = -23.439;
 pub const J2000_DAY: f64 = 2451545.0;
 pub const J2000_EARTH_MEAN_ANOMALY: f64 = 1.98627277778;
+
 pub const EARTH_MEAN_ANOMALY_PER_JDAY: f64 = 0.00547555711;
+pub const EARTH_AXIAL_TILT_PET_JDAY: f64 = 0.0000004;
 
 /// Convert East North Up vector to Azimuth, Elevation, and Radial Distance
 #[flutter_rust_bridge::frb(sync)] 
@@ -34,10 +36,10 @@ pub fn enu_to_azelrad(
 /// rot_rate_rad_day: `f64`
 ///     Rotation rate of body in radians per day
 #[flutter_rust_bridge::frb(sync)] 
-pub fn calc_inertial_rotational_rotam(
+pub fn calc_eci_to_ecef_rotam(
     date_time: DateTime<Utc>,
-    rad_per_day: f64
 ) -> Matrix3<f64> { 
+    let rad_per_day = ROT_RATE * 60. * 60. * 24.;
     let theta: f64 = rad_per_day * datetime_to_j2000days(date_time);
     let rotam: Matrix3<f64> = Matrix3::<f64>::new(
         theta.cos(), -theta.sin(), 0.,
@@ -129,7 +131,7 @@ pub fn date_to_julian_day_num(
 /// xyz: `Vector3<f64>`
 ///     Cartesian coords
 #[flutter_rust_bridge::frb(sync)] 
-pub fn planetodetic_to_cartesian_rotational(
+pub fn llh_to_ecef(
     lla: Vector3<f64>,
 ) -> Vector3<f64> {
     let radius: f64 = calc_prime_vertical(lla[0]);
@@ -194,13 +196,12 @@ pub fn ecef_to_lla(
     let ecc_2: f64 = (a.powi(2) - b.powi(2)) / a.powi(2);
     let ecc_2_prime: f64 = a.powi(2) / b.powi(2) - 1.0;
     
-    let x: f64 = ecef[0] / 1000;
-    let y: f64 = ecef[1] / 1000;
-    let z: f64 = ecef[2] / 1000;
+    let x: f64 = ecef[0] / 1000.;
+    let y: f64 = ecef[1] / 1000.;
+    let z: f64 = ecef[2] / 1000.;
 
     let p: f64 = (x.powi(2) + y.powi(2)).sqrt();
-    let g: f64 = p.powi(2) + (1.0 - ecc_2) * z.powi(2) - 
-        ecc_2 * (a.powi(2) - b.powi(2));
+    let g: f64 = p.powi(2) + (1.0 - ecc_2) * z.powi(2) - ecc_2 * (a.powi(2) - b.powi(2));
     let f: f64 = 54.0 * b.powi(2) * z.powi(2);
     let c: f64 = ecc_2.powi(2) * f * p.powi(2) / (g.powi(3));
     
@@ -208,11 +209,10 @@ pub fn ecef_to_lla(
     let cap_p: f64 = f / (3.0 * (s + 1.0 + 1.0 / s).powi(2) * g.powi(2));
 
     let q: f64 = (1.0 + 2.0 * ecc_2.powi(2) * cap_p).sqrt();
-    let r_0: f64 = -cap_p * ecc_2 * p /(1.0 + q) + 
-        ((a.powi(2)/2.0) * (1.0 + 1.0 / q) - 
-        cap_p * (1.0 - ecc_2) * z.powi(2) / (q * (1.0 + q)) - 
-        cap_p * (p.powi(2)/2.0)).sqrt();
-
+    let r_0_2_1 = (a.powi(2)/2.0) * (1.0 + 1.0 / q);
+    let r_0_2_2 = (1.0 - ecc_2) * z.powi(2) / (q * (1.0 + q)) - (p.powi(2)/2.0);
+    let r_0_2 = r_0_2_1 - cap_p * r_0_2_2;
+    let r_0: f64 = - cap_p * ecc_2 * p /(1.0 + q) + (r_0_2).sqrt();
 
     let u: f64 = ((p - (ecc_2 * r_0)).powi(2) + z.powi(2)).sqrt();
     let v: f64 = ((p - (ecc_2 * r_0)).powi(2) + (1.0 - ecc_2) * z.powi(2)).sqrt();
@@ -231,23 +231,19 @@ pub fn calc_sun_norm_eci_vec(
     j2000_days: f64
 ) -> Vector3<f64> {
     let mean_lon_deg: f64 = 280.460 + 0.98560028 * j2000_days;
-    let mean_lon: f64 = mean_lon_deg * PI / 180.0;
-    let mean_anom: f64 = calc_julian_day_mean_anom(j2000_days);
+    let mean_anom: f64 = J2000_EARTH_MEAN_ANOMALY + EARTH_MEAN_ANOMALY_PER_JDAY * j2000_days;
 
-    let ecliptic_lon: f64 = mean_lon + calc_ecliptic_lon(mean_anom);
+    let u_1_deg: f64 = 1.9148 * mean_anom.sin();
+    let u_2_deg: f64 = 0.02 * (2. * mean_anom).sin();
+    let ecliptic_lon: f64 = (mean_lon_deg + u_1_deg + u_2_deg) * PI / 180.0;
 
-    let obliquity: f64 = -(AXIAL_TILT + 0.0000004 * j2000_days);
+    let obliquity: f64 = -(AXIAL_TILT + EARTH_AXIAL_TILT_PET_JDAY * j2000_days);
 
     let eci_x_norm: f64 = ecliptic_lon.cos();
     let eci_y_norm: f64 = ecliptic_lon.sin() * obliquity.cos();
     let eci_z_norm: f64 = ecliptic_lon.sin() * obliquity.sin();
 
     return Vector3::new(eci_x_norm, eci_y_norm, eci_z_norm);
-}
-
-pub fn calc_julian_day_mean_anom(j2000_days: f64) -> f64 {
-    let rad_per_jday: f64 = EARTH_MEAN_ANOMALY_PER_JDAY;
-    return J2000_EARTH_MEAN_ANOMALY + rad_per_jday * j2000_days;
 }
 
 /// Map between fixed frame observation to enu
@@ -266,27 +262,17 @@ pub fn calc_julian_day_mean_anom(j2000_days: f64) -> f64 {
 ///     East, North, Up
 #[flutter_rust_bridge::frb(sync)] 
 pub fn ecef_to_enu(
-    observer_lla: Vector3<f64>, 
-    p_tgt_ecef: Vec<Vector3<f64>>,
-) -> Vec<Vector3<f64>> {
-    let observer_ecef: Vector3<f64> = planetodetic_to_cartesian_rotational(
-        observer_lla,
-    );
-    let vec_ecef: Vec<Vector3<f64>> = p_tgt_ecef - observer_ecef;
+    p_lla: Vector3<f64>, 
+    p_tgt_ecef: Vector3<f64>
+) -> Vector3<f64> {
+    let observer_ecef: Vector3<f64> = llh_to_ecef(p_lla);
+    let vec_ecef: Vector3<f64> = p_tgt_ecef - observer_ecef;
     let ecef_enu: Matrix3<f64> = Matrix3::new(
-        -observer_lla[1].sin(), observer_lla[1].cos(), 0.0,
-        -observer_lla[1].cos()*observer_lla[0].sin(), -observer_lla[1].sin()*observer_lla[0].sin(), observer_lla[0].cos(),
-        observer_lla[1].cos()*observer_lla[0].cos(), observer_lla[1].sin()*observer_lla[0].cos(), observer_lla[0].sin());
-    let enu: Vec<Vector3<f64>> = ecef_enu * vec_ecef;
+        -p_lla[1].sin(), p_lla[1].cos(), 0.0,
+        -p_lla[1].cos()*p_lla[0].sin(), -p_lla[1].sin()*p_lla[0].sin(), p_lla[0].cos(),
+        p_lla[1].cos()*p_lla[0].cos(), p_lla[1].sin()*p_lla[0].cos(), p_lla[0].sin());
+    let enu: Vector3<f64> = ecef_enu * vec_ecef;
     return enu
-}
-
-
-#[flutter_rust_bridge::frb(sync)] 
-pub fn calc_ecliptic_lon(mean_anom_rad: f64) -> f64 {
-    let u_1_deg: f64 = 1.9148 * mean_anom_rad.sin();
-    let u_2_deg: f64 = 0.02 * (2. * mean_anom_rad).sin();
-    return (u_1_deg + u_2_deg) * PI / 180.0;
 }
 
 #[flutter_rust_bridge::frb(sync)] 
@@ -322,13 +308,8 @@ pub fn propogator(
 pub fn eci_to_llh(
     xyzt: Vec<(Vector3<f64>, DateTime<Utc>)>,
 ) -> Vec<Vector3<f64>> {
-    let p_llh: Vec<Vector3<f64>> = xyzt.into_iter().map(|p_eci, dt| {
-        let eci_to_ecef: Matrix3<f64> = calc_inertial_rotational_rotam(
-            dt, 
-            ROT_RATE * 60. * 60. * 24. 
-        );
-
-        return ecef_to_lla(eci_to_ecef * p_eci)
+    let p_llh: Vec<Vector3<f64>> = xyzt.into_iter().map(|(p_eci, dt)| {
+        return ecef_to_lla(calc_eci_to_ecef_rotam(dt) * p_eci)
 
     }).collect();
 
@@ -339,17 +320,11 @@ pub fn eci_to_llh(
 pub fn is_visible(
     xyzt: Vec<(Vector3<f64>, DateTime<Utc>)>,
     observer_lla: Vector3<f64>
-) -> Vector3<bool>{
-    let observer_ecef: Vector3<f64> = planetodetic_to_cartesian_rotational(
-        observer_lla,
-    );
+) -> Vec<bool>{
+    let observer_ecef: Vector3<f64> = llh_to_ecef(observer_lla);
 
-    let is_visible: Vec<bool> = xyzt.into_iter().map(|p_eci, dt| {
-        let eci_to_ecef: Matrix3<f64> = calc_inertial_rotational_rotam(
-            dt, 
-            ROT_RATE * 60. * 60. * 24. 
-        );
-
+    let is_visible_list: Vec<bool> = xyzt.into_iter().map(|(p_eci, dt)| {
+        let eci_to_ecef: Matrix3<f64> = calc_eci_to_ecef_rotam(dt);
         let p_ecef: Vector3<f64> = eci_to_ecef * p_eci;
         let p_enu: Vector3<f64> = ecef_to_enu(
             observer_lla, 
@@ -358,21 +333,14 @@ pub fn is_visible(
         let observer_eci: Vector3<f64>  = eci_to_ecef.transpose() * observer_ecef;
         
         let is_overhead: bool = p_enu[2] >= 0.;
-        let is_night: bool = is_eclipsed_by_earth(
-            observer_eci, 
-            dt
-        );
-
-        let is_sunlit: bool = !is_eclipsed_by_earth(
-            p_eci, 
-            dt
-        );
+        let is_night: bool = is_eclipsed_by_earth(observer_eci, dt);
+        let is_sunlit: bool = !is_eclipsed_by_earth(p_eci, dt);
 
         return is_overhead && is_night && is_sunlit;
 
     }).collect();
     
-    return is_visible;
+    return is_visible_list;
 }
 
 
@@ -397,7 +365,7 @@ pub fn propagate_from_elements(
     ephemeris_type: u8,
 ) -> Vec<(Vector3<f64>, DateTime<Utc>)> {
 
-    let elements: sgp4::Elements = sgp4::Elements{
+    let elements: Elements = Elements{
         object_name: object_name,
         international_designator: international_designator,
         norad_id: 0,
@@ -416,9 +384,7 @@ pub fn propagate_from_elements(
         revolution_number: revolution_number,
         ephemeris_type: ephemeris_type,
     }; 
-    let constants: sgp4::Constants = sgp4::Constants::from_elements(
-        &elements
-    ).unwrap();
+    let constants: Constants = Constants::from_elements(&elements).unwrap();
 
     let now: DateTime<Utc> = Utc::now();
     let min_observer: i64 = (now - epoch.and_utc()).num_minutes();
