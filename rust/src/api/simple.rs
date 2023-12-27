@@ -301,7 +301,7 @@ pub fn propogator(
     min_dur: i64,
     obs_time_since_epoch: i64,
     ref_datetime: DateTime<Utc>,
-    constants: sgp4::Elements
+    constants: sgp4::Constants
 ) -> Vec<(Vector3<f64>, DateTime<Utc>)> {
     let xyzt: Vec<(Vector3<f64>, DateTime<Utc>)> = (0..min_dur).map(|minut_since_epoch| {
 
@@ -416,7 +416,6 @@ pub fn propagate_from_elements(
         revolution_number: revolution_number,
         ephemeris_type: ephemeris_type,
     }; 
-
     let constants: sgp4::Constants = sgp4::Constants::from_elements(
         &elements
     ).unwrap();
