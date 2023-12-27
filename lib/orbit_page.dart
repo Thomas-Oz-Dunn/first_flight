@@ -100,13 +100,6 @@ class Orbit {
   }
 }
 
-List<LatLng> LatLngTrajectory(
-    Orbit orbit, DateTime dateTime, double hrDuration) {
-  var props = propagate_from_elements();
-  var p_lla = eci_to_llh(props);
-  return LatLng(p_lla[0], p_lla[1]);
-}
-
 Future<List<Orbit>> fetchOrbits(String url) async {
   final response = await http.get(Uri.parse(url));
   int nameIdx = url.indexOf('NAME=');
@@ -155,3 +148,16 @@ class OrbitPage extends StatelessWidget {
     );
   }
 }
+
+
+// List<LatLng, DateTime> LatLngTrajectory(
+//   Orbit orbit, 
+//   DateTime dateTime, 
+//   double hrDuration
+// ) {
+//   var props = propagate_from_elements(
+
+//   );
+//   var p_lla = eci_to_llh(props);
+//   return List<LatLng(p_lla[0], p_lla[1])>;
+// }

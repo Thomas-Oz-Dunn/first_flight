@@ -70,7 +70,6 @@ class _FavoritesPageState extends State<FavoritesPage> {
 
   @override
   Widget build(BuildContext context) {
-    // TODO-TD: hide search bar unless scrolled up?
     var favoritesSearchBar = AppBar(
       automaticallyImplyLeading: false,
       title: Container(

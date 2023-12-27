@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:first_flight/src/rust/api/simple.dart';
 import 'package:first_flight/src/rust/frb_generated.dart';
 
 import 'favorites_page.dart';
@@ -155,15 +154,8 @@ class _MainPageState extends State<MainPage> {
   }
 
   void _addToHistory(name) {
-    // TODO-TD: store chronology datetime of searches
     history.add(name);
     preferences?.setStringList(HISTORY_KEY, history);
-    setState(() {});
-  }
-
-  void _removeFromFavorites(name) {
-    favorites.remove(name);
-    preferences?.setStringList(FAVORITES_KEY, favorites);
     setState(() {});
   }
 

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:image/image.dart' as im;
+import 'dart:math';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:latlong2/latlong.dart';
@@ -63,12 +65,16 @@ class _MapPageState extends State<MapPage> {
                   const LatLng(-65, 180),
                 ),
                 // TODO-TD: Project to Mercator
-                // TODO-TD: on tap return brightnesds value
+                // TODO-TD: on tap return brightness value
                 imageProvider: const NetworkImage(
                     'https://djlorenz.github.io/astronomy/lp2022/world2022_low3.png'),
               ),
             ],
           ),
+          generateTrajectoryLayer([
+            [LatLng(0, 0), LatLng(1, 1), LatLng(10, 10)],
+            [LatLng(90, 45), LatLng(91, 41), LatLng(95, 30)],
+          ]),
           RichAttributionWidget(
             attributions: [
               TextSourceAttribution(
@@ -85,30 +91,63 @@ class _MapPageState extends State<MapPage> {
   }
 }
 
-Image projectMercator(
-  Image image,
-  LatLngBounds bounds,
-) {
-  final w = image.width! - 1;
-  final h = image.height! - 1;
-  final cx = image.width! ~/ 2;
-  final cy = image.height! ~/ 2;
-  final nCntX = 2 * (cx / w) - 1;
-  final nCntY = 2 * (cy / h) - 1;
 
-  final latCenter = bounds.center.latitude;
-  final lonCenter = bounds.center.longitude;
+PolylineLayer generateTrajectoryLayer(
+  List<List<LatLng>> trajectories
+){
+  List<Polyline> lines = trajectories.map(
+    (line){
+      return Polyline(
+        points: line,
+        color: Colors.blue,
+    );}
+  ).toList();
 
-  // pixel to km
-
-  // deg / pixel vert horiz
-  // lat = y_km / R_earth + latCenter
-  // long = x_km / R_earth + lonCenter
-
-  // interpolate to new image
-  // X_km = R_earth * (long - long_center)
-  // Y_km = R_earth * ln(tan(pi / 4 + lat / 2))
-
-  // km to pixel
-  return image;
+  return PolylineLayer(
+    polylines: lines,
+  );
 }
+
+
+
+im.Image projectMercator(
+  im.Image image,
+  LatLngBounds bounds,
+){
+  double latCenter = bounds.center.latitude;
+
+  double latNW = bounds.northWest.latitude;
+  double lonNW = bounds.northWest.longitude;
+
+  double latSE = bounds.southEast.latitude;
+  double lonSE = bounds.southEast.longitude;
+
+  for (final frame in image.frames) {
+    final orig = frame.clone(noAnimation: true);
+    double w = frame.width - 1;
+    double h = frame.height - 1;
+
+    int cx = frame.width ~/ 2;
+    int cy = frame.height ~/ 2;
+    
+    double nCntX = 2 * (cx / w) - 1;
+    double nCntY = 2 * (cy / h) - 1;
+    
+    for (final p in frame) {
+      
+      var lat = (p.y - cy) / nCntY * (latNW - latSE) / 2 + latCenter;
+      final x = ((p.x - cx) / nCntX * (lonSE - lonNW) / 2) / (2*pi);
+      final y = log(tan(pi / 4 + lat / 2)) / (2*pi);
+      final p2 = orig.getPixelInterpolate(x, y, interpolation: im.Interpolation.nearest);
+
+        p
+          ..r = p2.r
+          ..g = p2.g
+          ..b = p2.b;
+    }
+
+  }
+  return image;
+
+}
+
