@@ -1,4 +1,3 @@
-import 'package:first_flight/src/rust/src/api/overhead_pass.rs';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -11,19 +10,19 @@ class Orbit {
   final String objectID;
   final String epoch;
   final double meanMotion;
-  final double eccentricity; 
+  final double eccentricity;
   final double inc;
-  final double raan; 
-  final double argPericenter; 
-  final double meanAnom; 
-  final int ephemType; 
-  final String classification; 
-  final int norad; 
-  final int elemSetNo; 
-  final int revNum; 
+  final double raan;
+  final double argPericenter;
+  final double meanAnom;
+  final int ephemType;
+  final String classification;
+  final int norad;
+  final int elemSetNo;
+  final int revNum;
   final double bStar;
-  final double meanMotionDot; 
-  final double meanMotionDdot; 
+  final double meanMotionDot;
+  final double meanMotionDdot;
 
   const Orbit({
     required this.objectName,
@@ -45,7 +44,7 @@ class Orbit {
     required this.meanMotionDdot,
   });
 
-  String describe(){
+  String describe() {
     return '''
       Epoch Date Time: $epoch
       Mean Motion: $meanMotion
@@ -53,7 +52,7 @@ class Orbit {
       Inclination: $inc deg
       Ascending Node: $raan  deg
       Argument Perigee: $argPericenter deg
-      Mean Anomaly: $meanAnom deg'''; 
+      Mean Anomaly: $meanAnom deg''';
   }
 
   factory Orbit.fromJson(Map<String, dynamic> json) {
@@ -62,20 +61,20 @@ class Orbit {
         'OBJECT_NAME': String objectName,
         'OBJECT_ID': String objectID,
         'EPOCH': String epoch,
-        'MEAN_MOTION': double meanMotion, 
-        'ECCENTRICITY': double eccentricity, 
-        'INCLINATION': num inc, 
-        'RA_OF_ASC_NODE': num raan, 
-        'ARG_OF_PERICENTER': num argPericenter, 
-        'MEAN_ANOMALY': num meanAnom, 
-        'EPHEMERIS_TYPE': int ephemType, 
-        'CLASSIFICATION_TYPE': String classification, 
-        'NORAD_CAT_ID': int noradID, 
-        'ELEMENT_SET_NO': int elemSetNo, 
-        'REV_AT_EPOCH': int revNum, 
-        'BSTAR': num bStar, 
-        'MEAN_MOTION_DOT': num meanMotionDot, 
-        'MEAN_MOTION_DDOT': num meanMotionDdot, 
+        'MEAN_MOTION': double meanMotion,
+        'ECCENTRICITY': double eccentricity,
+        'INCLINATION': num inc,
+        'RA_OF_ASC_NODE': num raan,
+        'ARG_OF_PERICENTER': num argPericenter,
+        'MEAN_ANOMALY': num meanAnom,
+        'EPHEMERIS_TYPE': int ephemType,
+        'CLASSIFICATION_TYPE': String classification,
+        'NORAD_CAT_ID': int noradID,
+        'ELEMENT_SET_NO': int elemSetNo,
+        'REV_AT_EPOCH': int revNum,
+        'BSTAR': num bStar,
+        'MEAN_MOTION_DOT': num meanMotionDot,
+        'MEAN_MOTION_DDOT': num meanMotionDdot,
       } =>
         Orbit(
           objectName: objectName,
@@ -99,40 +98,36 @@ class Orbit {
       _ => throw FormatException('Failed to load: $json'),
     };
   }
-
-
 }
 
-List<LatLng> LatLngTrajectory(Orbit orbit, DateTime dateTime, double hrDuration){
-  final x = calc_overhead_passes();
+List<LatLng> LatLngTrajectory(
+    Orbit orbit, DateTime dateTime, double hrDuration) {
+  var props = propagate_from_elements();
+  var p_lla = eci_to_llh(props);
+  return LatLng(p_lla[0], p_lla[1]);
 }
-
 
 Future<List<Orbit>> fetchOrbits(String url) async {
   final response = await http.get(Uri.parse(url));
   int nameIdx = url.indexOf('NAME=');
   int formatIdx = url.indexOf('&FORMAT');
-  String name = url.substring(nameIdx+5, formatIdx);
-      
+  String name = url.substring(nameIdx + 5, formatIdx);
+
   if (response.statusCode == 200) {
-    if (response.body.toString() == 'No GP data found'){
+    if (response.body.toString() == 'No GP data found') {
       throw Exception('No data found for $name');
     }
-    
+
     Iterable iterable = json.decode(response.body);
-    List<Orbit> orbits = List<Orbit>.from(
-      iterable.map((contents) {
-        return Orbit.fromJson(contents);
-      })
-    );
+    List<Orbit> orbits = List<Orbit>.from(iterable.map((contents) {
+      return Orbit.fromJson(contents);
+    }));
 
     return orbits;
-
   } else {
     throw Exception('Failed to load orbits for $name');
   }
 }
-
 
 class OrbitPage extends StatelessWidget {
   final Orbit orbit;
@@ -141,26 +136,22 @@ class OrbitPage extends StatelessWidget {
 
   // Pass in Orbit object
   @override
-  Widget build(BuildContext context){
-
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text(orbit.objectName)),
-      body: ListView(
-        children: [
-          const Divider(),
-          const Text('TODO: Picture'),
-          const Divider(),
-          const Row(
+      body: ListView(children: [
+        const Divider(),
+        const Text('TODO: Picture'),
+        const Divider(),
+        const Row(
             mainAxisAlignment: MainAxisAlignment.end,
-            children: [Text('TODO: View, Favorite, Share, Notify Buttons')]
-          ),
-          const Divider(),
-          const Text('Next Passes List: TODO'), 
-          const Divider(),
-          const Text('Orbital Information'),
-          Text(orbit.describe()),
-        ]
-      ),
+            children: [Text('TODO: View, Favorite, Share, Notify Buttons')]),
+        const Divider(),
+        const Text('Next Passes List: TODO'),
+        const Divider(),
+        const Text('Orbital Information'),
+        Text(orbit.describe()),
+      ]),
     );
   }
 }

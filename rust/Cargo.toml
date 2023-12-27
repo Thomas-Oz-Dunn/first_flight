@@ -8,3 +8,11 @@ crate-type = ["cdylib", "staticlib"]
 
 [dependencies]
 flutter_rust_bridge = "=2.0.0-dev.4"
+clap = { version = "4.4.6", features = ["derive"] }
+parse-tle = "0.1.4"
+sgp4 = "2.1.0"
+nalgebra = "0.31.4"
+plotters = "0.3.4"
+chrono = "0.4.23"
+polars = "0.28.0"
+

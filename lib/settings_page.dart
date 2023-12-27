@@ -16,23 +16,22 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
-    // Search bar
-    // - Display only the search results
+  // Search bar
+  // - Display only the search results
 
-    // - reset all settings
-    // - control location services
-    // - enable disable notifications
-    // - sensor calibration
+  // - reset all settings
+  // - control location services
+  // - enable disable notifications
+  // - sensor calibration
 
   final _textFieldController = TextEditingController();
   final _editingController = TextEditingController();
 
   List<String> filteredItems = [];
-  
+
   SharedPreferences? preferences;
   String defaultEmail = 'person@email.com';
   String email = 'person@email.com';
-
 
   Future<void> initStorage() async {
     preferences = await SharedPreferences.getInstance();
@@ -94,150 +93,129 @@ class _SettingsPageState extends State<SettingsPage> {
         context: context,
         builder: (context) {
           return dialogBox;
-        }
-      );
+        });
   }
+
   @override
-  Widget build(BuildContext context){
-
+  Widget build(BuildContext context) {
     var searchBar = TextField(
-      controller: _editingController,
-      decoration: const InputDecoration(
-        floatingLabelBehavior: FloatingLabelBehavior.never,
-        labelText: "Search",
-        hintText: "Search Settings",
-        prefixIcon: Icon(Icons.search),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.all(Radius.circular(15.0)
-          )
-        )
-      )
-    );
-
+        controller: _editingController,
+        decoration: const InputDecoration(
+            floatingLabelBehavior: FloatingLabelBehavior.never,
+            labelText: "Search",
+            hintText: "Search Settings",
+            prefixIcon: Icon(Icons.search),
+            border: OutlineInputBorder(
+                borderRadius: BorderRadius.all(Radius.circular(15.0)))));
 
     var emailTile = ListTile(
-      leading: const Icon(Icons.mail),
-      title: const Text("Email"),
-      subtitle: Text(email),
-      trailing: IconButton(
-        icon: const Icon(Icons.delete),
-        onPressed: () async {
-          _removeEmail();
-        },
-      ),
-      onTap: () async {
-        var resultLabel = await _showTextInputDialog(context);
-        if (resultLabel != null) {
-          setState(() {
-            _updateEmail(resultLabel);
-            }
-          );
-        }
-      }
-    );
+        leading: const Icon(Icons.mail),
+        title: const Text("Email"),
+        subtitle: Text(email),
+        trailing: IconButton(
+          icon: const Icon(Icons.delete),
+          onPressed: () async {
+            _removeEmail();
+          },
+        ),
+        onTap: () async {
+          var resultLabel = await _showTextInputDialog(context);
+          if (resultLabel != null) {
+            setState(() {
+              _updateEmail(resultLabel);
+            });
+          }
+        });
 
     var clearHistoryTile = ListTile(
-      leading: const Icon(Icons.history),
-      title: const Text("Clear History"),
-      subtitle: const Text("Clear all search history"),
-      trailing: IconButton(
-        icon: const Icon(Icons.delete_forever_sharp),
-        onPressed: () async {
-          await preferences?.remove(HISTORY_KEY);
-          setState(() {});
-        },
-      )
-    );
+        leading: const Icon(Icons.history),
+        title: const Text("Clear History"),
+        subtitle: const Text("Clear all search history"),
+        trailing: IconButton(
+          icon: const Icon(Icons.delete_forever_sharp),
+          onPressed: () async {
+            await preferences?.remove(HISTORY_KEY);
+            setState(() {});
+          },
+        ));
 
     var clearFavoritesTile = ListTile(
-      leading: const Icon(Icons.favorite),
-      title: const Text("Clear Favorites"),
-      subtitle: const Text("Clear all favorites"),
-      trailing: IconButton(
-        icon: const Icon(Icons.delete_forever_sharp),
-        onPressed: () async {
-          await preferences?.remove(FAVORITES_KEY); 
-          setState(() {});
-        },
-      )
-    );
+        leading: const Icon(Icons.favorite),
+        title: const Text("Clear Favorites"),
+        subtitle: const Text("Clear all favorites"),
+        trailing: IconButton(
+          icon: const Icon(Icons.delete_forever_sharp),
+          onPressed: () async {
+            await preferences?.remove(FAVORITES_KEY);
+            setState(() {});
+          },
+        ));
 
     var themeConsumer = Consumer<ModelThemeProvider>(
-      builder: (context, ModelThemeProvider themeNotifier, child) {
+        builder: (context, ModelThemeProvider themeNotifier, child) {
+      var darkmodeTile = ListTile(
+        leading: Icon(
+            themeNotifier.isDark ? Icons.nightlight_round : Icons.wb_sunny),
+        title: Text(themeNotifier.isDark ? "Dark Mode" : "Light Mode"),
+        trailing: Switch(
+            value: themeNotifier.isDark,
+            activeColor: Colors.purple,
+            onChanged: (val) {
+              setState(() {
+                themeNotifier.isDark = val;
+              });
+            }),
+      );
 
-        var darkmodeTile = ListTile(
-          leading: Icon(
-            themeNotifier.isDark ? Icons.nightlight_round : Icons.wb_sunny
+      var settingsBody = SingleChildScrollView(
+        child: Container(
+          alignment: Alignment.center,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [Text("Common")],
+              ),
+              const ListTile(
+                // TODO-TD: give control capabilities
+                title: Text("Location"),
+                leading: Icon(Icons.pin_drop),
+                subtitle: Text("Here"),
+              ),
+              const ListTile(
+                // TODO-TD: give control capabilities
+                title: Text("Notifications"),
+                leading: Icon(Icons.notifications),
+                subtitle: Text("Get notified on upcoming passes"),
+              ),
+              const ListTile(
+                // TODO-TD: give control capabilities
+                title: Text("Language"),
+                leading: Icon(Icons.language),
+                subtitle: Text("English"),
+              ),
+              const Divider(),
+              emailTile,
+              darkmodeTile,
+              const Divider(),
+              const Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [Text("Account")],
+              ),
+              clearHistoryTile,
+              clearFavoritesTile
+            ],
           ),
-          title: Text(themeNotifier.isDark ? "Dark Mode" : "Light Mode"),
-          trailing: Switch(
-              value: themeNotifier.isDark,
-              activeColor: Colors.purple,
-              onChanged: (val) {
-                setState(() {
-                  themeNotifier.isDark = val;
-                }
-              );
-            }
-          ),
-        );
+        ),
+      );
 
-        var settingsBody = SingleChildScrollView(
-          child: Container(
-            alignment: Alignment.center,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [Text("Common")],
-                ),
-                const ListTile(
-                  // TODO-TD: give control capabilities
-                  title: Text("Location"),
-                  leading: Icon(Icons.pin_drop),
-                  subtitle: Text("Here"),
-                ),
-                const ListTile(
-                  // TODO-TD: give control capabilities
-                  title: Text("Notifications"),
-                  leading: Icon(Icons.notifications),
-                  subtitle: Text("Get notified on upcoming passes"),
-                ),
-                const ListTile(
-                  // TODO-TD: give control capabilities
-                  title: Text("Language"),
-                  leading: Icon(Icons.language),
-                  subtitle: Text("English"),
-                ),
-                const Divider(),
-                emailTile,
-                darkmodeTile,
-                const Divider(),
-                const Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [Text("Account")],
-                ),
-                clearHistoryTile,
-                clearFavoritesTile
-              ],
-            ),
-          ),
-        );
-
-        return Scaffold(
+      return Scaffold(
           appBar: AppBar(
             title: const Text("Settings"),
           ),
-          body: Column(
-            children: [
-              searchBar, 
-              settingsBody
-            ]
-          )
-        );
-      }
-    );
-    return themeConsumer;       
+          body: Column(children: [searchBar, settingsBody]));
+    });
+    return themeConsumer;
   }
 }

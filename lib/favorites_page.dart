@@ -70,7 +70,6 @@ class _FavoritesPageState extends State<FavoritesPage> {
 
   @override
   Widget build(BuildContext context) {
-
     // TODO-TD: hide search bar unless scrolled up?
     var favoritesSearchBar = AppBar(
       automaticallyImplyLeading: false,
@@ -82,56 +81,50 @@ class _FavoritesPageState extends State<FavoritesPage> {
           decoration: InputDecoration(
             prefixIcon: IconButton(
               icon: const Icon(Icons.search_rounded),
-              onPressed: () => _filterListBySearchText(_searchFaveController.text),
+              onPressed: () =>
+                  _filterListBySearchText(_searchFaveController.text),
             ),
             hintText: 'Search Favorites',
             suffixIcon: IconButton(
-              icon: const Icon(Icons.clear_rounded),
-              onPressed: () {
-                _searchFaveController.text = "";
-                _filterListBySearchText(_searchFaveController.text);
-              }
-            ),
+                icon: const Icon(Icons.clear_rounded),
+                onPressed: () {
+                  _searchFaveController.text = "";
+                  _filterListBySearchText(_searchFaveController.text);
+                }),
           ),
           onChanged: (value) => _filterListBySearchText(value),
           onSubmitted: (value) => _filterListBySearchText(value),
-          ),
         ),
-      );
-    
+      ),
+    );
+
     var favoritesSearchResults = ListView.builder(
       itemCount: _filteredFavoritesList.length,
       shrinkWrap: true,
       padding: const EdgeInsets.only(bottom: 10),
       itemBuilder: (context, itemIdxs) {
-          int backIdx = _filteredFavoritesList.length - 1 -itemIdxs;
-          var buttonOptions = [
-            MenuItemButton(
-              onPressed: () =>
-                  setState(() {
-                    // TODO-TD: store list of orbits being viewed
-                  }),
-              child: const Text('Map'),
-            ),
-            MenuItemButton(
-              onPressed: () => 
-                setState(() {
-                  _removeFavorite(_filteredFavoritesList[backIdx]);
-                }),
-              child: const Text('Remove'),
-            ),
-          ];
+        int backIdx = _filteredFavoritesList.length - 1 - itemIdxs;
+        var buttonOptions = [
+          MenuItemButton(
+            onPressed: () => setState(() {
+              // TODO-TD: store list of orbits being viewed
+            }),
+            child: const Text('Map'),
+          ),
+          MenuItemButton(
+            onPressed: () => setState(() {
+              _removeFavorite(_filteredFavoritesList[backIdx]);
+            }),
+            child: const Text('Remove'),
+          ),
+        ];
 
-          var favoriteTile = ListTile(
+        var favoriteTile = ListTile(
             title: Text(_filteredFavoritesList[backIdx]),
             trailing: MenuAnchor(
-              menuChildren: buttonOptions,
-              builder:
-                (
-                  BuildContext context, 
-                  MenuController controller, 
-                  Widget? child
-                ) {
+                menuChildren: buttonOptions,
+                builder: (BuildContext context, MenuController controller,
+                    Widget? child) {
                   var menuButton = IconButton(
                     icon: const Icon(Icons.more_vert),
                     onPressed: () {
@@ -142,23 +135,20 @@ class _FavoritesPageState extends State<FavoritesPage> {
                       }
                     },
                   );
-                return menuButton;
-              }
-            )
-          );
-          return favoriteTile;
+                  return menuButton;
+                }));
+        return favoriteTile;
       },
     );
-      
+
     var pageLayout = Scaffold(
-      appBar: AppBar(
+        appBar: AppBar(
           title: const Text('Favorites'),
         ),
-      body: Scaffold(
-        appBar: favoritesSearchBar,
-        body: favoritesSearchResults,
-      )
-    );
+        body: Scaffold(
+          appBar: favoritesSearchBar,
+          body: favoritesSearchResults,
+        ));
 
     return pageLayout;
   }

@@ -131,16 +131,11 @@ pub fn date_to_julian_day_num(
 #[flutter_rust_bridge::frb(sync)] 
 pub fn planetodetic_to_cartesian_rotational(
     lla: Vector3<f64>,
-    equatorial_radius: f64,
-    eccentricity: f64
 ) -> Vector3<f64> {
-    let radius: f64 = calc_prime_vertical(
-        lla[0], 
-        equatorial_radius,
-        eccentricity);
+    let radius: f64 = calc_prime_vertical(lla[0]);
     let x: f64 = (radius + lla[2]) * lla[0].cos() * lla[1].cos();
     let y: f64 = (radius + lla[2]) * lla[0].cos() * lla[1].sin();
-    let z: f64 = ((1.0 - eccentricity.powi(2)) * radius + lla[2]) * lla[0].sin();
+    let z: f64 = ((1.0 - SURFACE_ECC.powi(2)) * radius + lla[2]) * lla[0].sin();
     let xyz: Vector3<f64> = Vector3::new(x, y, z); 
     return xyz
 }
@@ -154,12 +149,10 @@ pub fn planetodetic_to_cartesian_rotational(
 #[flutter_rust_bridge::frb(sync)] 
 pub fn calc_prime_vertical(
     lat_deg: f64, 
-    equatorial_radius: f64,
-    eccentricity: f64
 ) -> f64 {
     let lat_radians: f64 = PI * lat_deg / 180.0;
-    let radius: f64 = 
-        equatorial_radius / (1.0 - (eccentricity * lat_radians.sin()).powi(2)).sqrt();
+    let rad_scale = (1.0 - (SURFACE_ECC * lat_radians.sin()).powi(2)).sqrt();
+    let radius: f64 = RADIUS_EQUATOR / rad_scale;
     return radius
 }
 
@@ -177,6 +170,60 @@ pub fn is_eclipsed_by_earth(
     // TODO-TD: increase precision in radius calculation
     let beta_eclipse: f64 = PI - (RADIUS_EQUATOR / p_eci.norm()).asin();
     return beta > beta_eclipse;
+}
+
+/// Rectangular coordinates to geodetic
+/// 
+/// Inputs
+/// ------
+/// ecef: `Vector3<f64>
+///     Rectangular coordinates in km
+/// 
+/// Outputs
+/// -------
+/// lla: `Vector3<f64>`
+///     Geodetic coordinates in degrees
+#[flutter_rust_bridge::frb(sync)] 
+pub fn ecef_to_lla(
+    ecef: Vector3<f64>
+) -> Vector3<f64> {
+    // Zhu's method
+    let a: f64 = RADIUS_EQUATOR;
+    let b: f64 = RADIUS_EQUATOR * (1. - SURFACE_ECC.powi(2)).sqrt();
+    
+    let ecc_2: f64 = (a.powi(2) - b.powi(2)) / a.powi(2);
+    let ecc_2_prime: f64 = a.powi(2) / b.powi(2) - 1.0;
+    
+    let x: f64 = ecef[0] / 1000;
+    let y: f64 = ecef[1] / 1000;
+    let z: f64 = ecef[2] / 1000;
+
+    let p: f64 = (x.powi(2) + y.powi(2)).sqrt();
+    let g: f64 = p.powi(2) + (1.0 - ecc_2) * z.powi(2) - 
+        ecc_2 * (a.powi(2) - b.powi(2));
+    let f: f64 = 54.0 * b.powi(2) * z.powi(2);
+    let c: f64 = ecc_2.powi(2) * f * p.powi(2) / (g.powi(3));
+    
+    let s: f64 = (1.0 + c + (c.powi(2) + 2.0 * c).sqrt()).powf(1. / 3.);
+    let cap_p: f64 = f / (3.0 * (s + 1.0 + 1.0 / s).powi(2) * g.powi(2));
+
+    let q: f64 = (1.0 + 2.0 * ecc_2.powi(2) * cap_p).sqrt();
+    let r_0: f64 = -cap_p * ecc_2 * p /(1.0 + q) + 
+        ((a.powi(2)/2.0) * (1.0 + 1.0 / q) - 
+        cap_p * (1.0 - ecc_2) * z.powi(2) / (q * (1.0 + q)) - 
+        cap_p * (p.powi(2)/2.0)).sqrt();
+
+
+    let u: f64 = ((p - (ecc_2 * r_0)).powi(2) + z.powi(2)).sqrt();
+    let v: f64 = ((p - (ecc_2 * r_0)).powi(2) + (1.0 - ecc_2) * z.powi(2)).sqrt();
+    let z_0: f64 = b.powi(2) * z / (a * v);
+
+    let lat: f64 = (z + ecc_2_prime * z_0).atan2(p) * 180.0 / PI;
+    let lon: f64 =  y.atan2(x) * 180.0 / PI;
+    let alt: f64 = u * (1.0 - b.powi(2) / (a * v));
+
+    let lla: Vector3<f64> = Vector3::new(lat, lon, alt);
+    return lla
 }
 
 #[flutter_rust_bridge::frb(sync)] 
@@ -218,22 +265,19 @@ pub fn calc_julian_day_mean_anom(j2000_days: f64) -> f64 {
 /// enu: `Vector3<f64>`
 ///     East, North, Up
 #[flutter_rust_bridge::frb(sync)] 
-pub fn fixed_frame_to_enu(
+pub fn ecef_to_enu(
     observer_lla: Vector3<f64>, 
-    p_tgt_fixed: Vector3<f64>,
-    equatorial_radius: f64,
-    eccentricity: f64
-) -> Vector3<f64> {
+    p_tgt_ecef: Vec<Vector3<f64>>,
+) -> Vec<Vector3<f64>> {
     let observer_ecef: Vector3<f64> = planetodetic_to_cartesian_rotational(
         observer_lla,
-        equatorial_radius,
-        eccentricity);
-    let vec_ecef: Vector3<f64> = p_tgt_fixed - observer_ecef;
+    );
+    let vec_ecef: Vec<Vector3<f64>> = p_tgt_ecef - observer_ecef;
     let ecef_enu: Matrix3<f64> = Matrix3::new(
         -observer_lla[1].sin(), observer_lla[1].cos(), 0.0,
         -observer_lla[1].cos()*observer_lla[0].sin(), -observer_lla[1].sin()*observer_lla[0].sin(), observer_lla[0].cos(),
         observer_lla[1].cos()*observer_lla[0].cos(), observer_lla[1].sin()*observer_lla[0].cos(), observer_lla[0].sin());
-    let enu: Vector3<f64> = ecef_enu * vec_ecef;
+    let enu: Vec<Vector3<f64>> = ecef_enu * vec_ecef;
     return enu
 }
 
@@ -246,7 +290,94 @@ pub fn calc_ecliptic_lon(mean_anom_rad: f64) -> f64 {
 }
 
 #[flutter_rust_bridge::frb(sync)] 
-pub fn calc_overhead_passes(
+pub fn calc_az_el_rads(p_enus: Vec<Vector3<f64>>) -> Vec<Vector3<f64>> {
+    return p_enus.into_iter().map(|p_enu|{
+        enu_to_azelrad(p_enu)
+    }).collect();
+}
+
+#[flutter_rust_bridge::frb(sync)] 
+pub fn propogator(
+    min_dur: i64,
+    obs_time_since_epoch: i64,
+    ref_datetime: DateTime<Utc>,
+    constants: sgp4::Elements
+) -> Vec<(Vector3<f64>, DateTime<Utc>)> {
+    let xyzt: Vec<(Vector3<f64>, DateTime<Utc>)> = (0..min_dur).map(|minut_since_epoch| {
+
+        let eval_date_time: DateTime<Utc> = ref_datetime + Duration::minutes(minut_since_epoch);
+        let min_since_epoch: sgp4::MinutesSinceEpoch = sgp4::MinutesSinceEpoch(
+            (minut_since_epoch + obs_time_since_epoch) as f64
+        );
+
+        let pos: [f64; 3] = constants.propagate(min_since_epoch).unwrap().position;
+        
+        return(Vector3::<f64>::new(pos[0], pos[1], pos[2]), eval_date_time);
+        
+    }).collect();
+    return xyzt
+}
+
+#[flutter_rust_bridge::frb(sync)] 
+pub fn eci_to_llh(
+    xyzt: Vec<(Vector3<f64>, DateTime<Utc>)>,
+) -> Vec<Vector3<f64>> {
+    let p_llh: Vec<Vector3<f64>> = xyzt.into_iter().map(|p_eci, dt| {
+        let eci_to_ecef: Matrix3<f64> = calc_inertial_rotational_rotam(
+            dt, 
+            ROT_RATE * 60. * 60. * 24. 
+        );
+
+        return ecef_to_lla(eci_to_ecef * p_eci)
+
+    }).collect();
+
+    return p_llh;
+}
+
+#[flutter_rust_bridge::frb(sync)] 
+pub fn is_visible(
+    xyzt: Vec<(Vector3<f64>, DateTime<Utc>)>,
+    observer_lla: Vector3<f64>
+) -> Vector3<bool>{
+    let observer_ecef: Vector3<f64> = planetodetic_to_cartesian_rotational(
+        observer_lla,
+    );
+
+    let is_visible: Vec<bool> = xyzt.into_iter().map(|p_eci, dt| {
+        let eci_to_ecef: Matrix3<f64> = calc_inertial_rotational_rotam(
+            dt, 
+            ROT_RATE * 60. * 60. * 24. 
+        );
+
+        let p_ecef: Vector3<f64> = eci_to_ecef * p_eci;
+        let p_enu: Vector3<f64> = ecef_to_enu(
+            observer_lla, 
+            p_ecef, 
+        ); 
+        let observer_eci: Vector3<f64>  = eci_to_ecef.transpose() * observer_ecef;
+        
+        let is_overhead: bool = p_enu[2] >= 0.;
+        let is_night: bool = is_eclipsed_by_earth(
+            observer_eci, 
+            dt
+        );
+
+        let is_sunlit: bool = !is_eclipsed_by_earth(
+            p_eci, 
+            dt
+        );
+
+        return is_overhead && is_night && is_sunlit;
+
+    }).collect();
+    
+    return is_visible;
+}
+
+
+#[flutter_rust_bridge::frb(sync)] 
+pub fn propagate_from_elements(
     observer_lla: Vector3<f64>,
     days_to_search: i64,
     object_name: Option<String>,
@@ -264,7 +395,7 @@ pub fn calc_overhead_passes(
     mean_motion: f64,
     revolution_number: u64,
     ephemeris_type: u8,
-) -> (Vec<Vector3<f64>>, Vec<DateTime<Utc>>) {
+) -> Vec<(Vector3<f64>, DateTime<Utc>)> {
 
     let elements: sgp4::Elements = sgp4::Elements{
         object_name: object_name,
@@ -291,62 +422,10 @@ pub fn calc_overhead_passes(
     ).unwrap();
 
     let now: DateTime<Utc> = Utc::now();
-    
     let min_observer: i64 = (now - epoch.and_utc()).num_minutes();
     let min_dur: i64 = days_to_search * 24 * 60;
-    
-    // TODO-TD: Use .map()
-    let mut azelrad: Vec<Vector3<f64>> = vec![];
-    let mut times: Vec<DateTime<Utc>> = vec![];
-
     let now: DateTime<Utc> = Utc::now();
-    
-    let observer_ecef: Vector3<f64> = planetodetic_to_cartesian_rotational(
-        observer_lla, 
-        RADIUS_EQUATOR, 
-        SURFACE_ECC
-    );
 
-    for minut in 0..min_dur {
-        let eval_date_time: DateTime<Utc> = now + Duration::minutes(minut);
-        let min_since_epoch: sgp4::MinutesSinceEpoch = sgp4::MinutesSinceEpoch((minut + min_observer) as f64);
-        let pos: [f64; 3] = constants.propagate(min_since_epoch).unwrap().position;
-        let p_eci: Vector3<f64> = Vector3::<f64>::new(pos[0], pos[1], pos[2]);
+    return propogator(min_dur, min_observer, now, constants);
 
-        // TODO-TD: split into propogator and binary mask
-        let eci_to_ecef: Matrix3<f64> = calc_inertial_rotational_rotam(
-            eval_date_time, 
-            ROT_RATE * 60. * 60. * 24. 
-        );
-
-        let p_ecef: Vector3<f64> = eci_to_ecef * p_eci;
-        let p_enu: Vector3<f64> = fixed_frame_to_enu(
-            observer_lla, 
-            p_ecef, 
-            RADIUS_EQUATOR, 
-            SURFACE_ECC
-        ); 
-
-        // TODO-TD: Vectorize
-        let is_overhead: bool = p_enu[2] >= 0.;
-        let observer_eci: Vector3<f64>  = eci_to_ecef.transpose() * observer_ecef;
-        let is_night: bool = is_eclipsed_by_earth(
-            observer_eci, 
-            eval_date_time
-        );
-
-        let is_sunlit: bool = !is_eclipsed_by_earth(
-            p_eci, 
-            eval_date_time
-        );
-
-        if is_sunlit && is_overhead && is_night{
-            let azelra: Vector3<f64> = enu_to_azelrad(p_enu);
-            azelrad.append(&mut vec![azelra]);
-            times.append(&mut vec![eval_date_time]);
-        }
-    }
-
-    let results = (azelrad, times);
-    return results;
 }
