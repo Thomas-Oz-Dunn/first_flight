@@ -10,6 +10,7 @@ import 'theme_handle.dart';
 import 'settings_page.dart';
 import 'orbit_page.dart';
 import 'news_page.dart';
+import 'view_page.dart';
 import 'map_page.dart';
 
 const FAVORITES_KEY = "Favorites";
@@ -67,7 +68,9 @@ class MainPage extends StatefulWidget {
 
 class _MainPageState extends State<MainPage> {
   List<Orbit> emptyOrbits = [];
-  late Future<List<Orbit>> futureOrbits;
+  late Future<List<Orbit>> futureSearchOrbits;
+  late Future<List<Orbit>> futureExploreOrbits;
+
 
   String celestrakSite = "https://celestrak.org/NORAD/elements/gp.php?";
   String celestrakName = "NAME=";
@@ -108,7 +111,8 @@ class _MainPageState extends State<MainPage> {
   void initState() {
     FlutterNativeSplash.remove();
     initStorage();
-    futureOrbits = Future.value(emptyOrbits);
+    futureSearchOrbits = Future.value(emptyOrbits);
+    futureExploreOrbits = Future.value(emptyOrbits);
     super.initState();
   }
 
@@ -167,8 +171,8 @@ class _MainPageState extends State<MainPage> {
 
   Future<List<Orbit>> queryCelestrak(String name) {
     String query = celestrakSite + celestrakName + name + celestrakJsonFormat;
-    futureOrbits = fetchOrbits(query);
-    return futureOrbits;
+    futureSearchOrbits = fetchOrbits(query);
+    return futureSearchOrbits;
   }
 
   @override
@@ -247,7 +251,7 @@ class _MainPageState extends State<MainPage> {
         title: const Text('SaTrack'),
         actions: [favoritesButton],
       ),
-      body: Center(child: Text('View Page TODO')),
+      body: ViewPage(),
     );
 
     // history
@@ -255,24 +259,57 @@ class _MainPageState extends State<MainPage> {
         appBar: AppBar(title: const Text('Search History')),
         body: historyListBuilder);
 
-    var searchResultsBuilder = FutureBuilder<List<Orbit>>(
-      future: futureOrbits,
-      builder: (context, snapshot) {
-        if (snapshot.hasData) {
-          List<Orbit> orbits = snapshot.data!;
-          return ListView.builder(itemBuilder: (context, itemIdxs) {
-            var buttonOptions = [
-              MenuItemButton(
-                onPressed: () => setState(() {
-                  // TODO-TD: store list of orbits to be viewed and mapped
-                }),
-                child: const Text('Map'),
+    List<Widget> getExploreTiles() {
+      return [
+        for (int i = 0; i < exploreTitles.length; i += 1)
+          TextButton(
+            style: TextButton.styleFrom(
+              backgroundColor: exploreColors[i],
+              shape: const RoundedRectangleBorder(
+                borderRadius: BorderRadius.all(Radius.circular(2)),
               ),
-              MenuItemButton(
-                onPressed: () => setState(() {
-                  _addFavorite(orbits[itemIdxs].objectName);
-                }),
-                child: const Text('Favorite'),
+            ),
+            child: Text(exploreTitles[i]),
+            onPressed: () {
+              fetchNewOrbitsAndSee(i, context);
+          },
+        ),
+      ];
+    }
+
+    var exploreTiles = Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: GridView(
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            mainAxisSpacing: 20,
+            crossAxisCount: 2,
+            crossAxisSpacing: 10,
+            childAspectRatio: 2,
+          ),
+          children: getExploreTiles()
+        )
+      );
+
+    var searchpageBody = Scaffold(
+      appBar: null,
+      body: emptySearchbar ? exploreTiles : FutureBuilder<List<Orbit>>(
+        future: futureSearchOrbits,
+        builder: (context, snapshot) {
+      if (snapshot.hasData) {
+        List<Orbit> orbits = snapshot.data!;
+        return ListView.builder(itemBuilder: (context, itemIdxs) {
+          var buttonOptions = [
+            MenuItemButton(
+              onPressed: () => setState(() {
+                // TODO-TD: store list of orbits to be viewed and mapped
+              }),
+              child: const Text('Map'),
+              ),
+            MenuItemButton(
+              onPressed: () => setState(() {
+                _addFavorite(orbits[itemIdxs].objectName);
+              }),
+              child: const Text('Favorite'),
               ),
             ];
 
@@ -305,64 +342,15 @@ class _MainPageState extends State<MainPage> {
                         );
                         return menuButton;
                       }));
-              return orbitTile;
-            }
-          });
-        } else if (snapshot.hasError) {
-          return Text('${snapshot.error}');
-        }
-
-        return const Center(child: CircularProgressIndicator());
-      },
-    );
-
-    List<Widget> getExploreTiles() {
-      return [
-        for (int i = 0; i < exploreTitles.length; i += 1)
-          TextButton(
-            style: TextButton.styleFrom(
-              backgroundColor: exploreColors[i],
-              shape: const RoundedRectangleBorder(
-                borderRadius: BorderRadius.all(Radius.circular(2)),
-              ),
-            ),
-            child: Text(exploreTitles[i]),
-            onPressed: () {
-              futureOrbits = Future.value(emptyOrbits);
-              fetchOrbits(
-                      '$celestrakSite${exploreFlags[i]}$celestrakJsonFormat')
-                  .then((value) {
-                setState(() {
-                  futureOrbits = Future.value(value);
-                });
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => Scaffold(
-                            appBar: AppBar(title: Text(exploreTitles[i])),
-                            body: searchResultsBuilder,
-                          )),
-                );
-              });
-            },
-          ),
-      ];
-    }
-
-    var exploreTiles = Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        child: GridView(
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              mainAxisSpacing: 20,
-              crossAxisCount: 2,
-              crossAxisSpacing: 10,
-              childAspectRatio: 2,
-            ),
-            children: getExploreTiles()));
-
-    var searchpageBody = Scaffold(
-      appBar: null,
-      body: emptySearchbar ? exploreTiles : searchResultsBuilder,
+                return orbitTile;
+              }
+            });
+          } else if (snapshot.hasError) {
+            return Text('${snapshot.error}');
+          }
+          return const Center(child: CircularProgressIndicator());
+        },
+      )
     );
 
     var searchBar = Container(
@@ -471,6 +459,81 @@ class _MainPageState extends State<MainPage> {
     );
 
     return mainPageLayout;
+  }
+
+  void fetchNewOrbitsAndSee(
+    int i, 
+    BuildContext context, 
+  ) {
+    futureExploreOrbits = fetchOrbits('$celestrakSite${exploreFlags[i]}$celestrakJsonFormat');
+    setState(() {});
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => Scaffold(
+          appBar: AppBar(title: Text(exploreTitles[i])),
+          body: FutureBuilder<List<Orbit>>(
+        future: futureExploreOrbits,
+        builder: (context, snapshot) {
+      if (snapshot.hasData) {
+        List<Orbit> orbits = snapshot.data!;
+        return ListView.builder(itemBuilder: (context, itemIdxs) {
+          var buttonOptions = [
+            MenuItemButton(
+              onPressed: () => setState(() {
+                // TODO-TD: store list of orbits to be viewed and mapped
+              }),
+              child: const Text('Map'),
+            ),
+            MenuItemButton(
+              onPressed: () => setState(() {
+                _addFavorite(orbits[itemIdxs].objectName);
+              }),
+              child: const Text('Favorite'),
+            ),
+          ];
+
+          if (itemIdxs < orbits.length) {
+            Orbit orbit = orbits[itemIdxs];
+            var orbitTile = ListTile(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => OrbitPage(orbit: orbit)),
+                  );
+                },
+                title: Text(orbit.objectName),
+                // TODO-TD: next pass in subtitle
+                subtitle: Text('Epoch Date Time (UTC): ${orbit.epoch}'),
+                trailing: MenuAnchor(
+                    menuChildren: buttonOptions,
+                    builder: (BuildContext context, MenuController controller,
+                        Widget? child) {
+                      var menuButton = IconButton(
+                        icon: const Icon(Icons.more_vert),
+                        onPressed: () {
+                          if (controller.isOpen) {
+                            controller.close();
+                          } else {
+                            controller.open();
+                          }
+                        },
+                      );
+                      return menuButton;
+                    }));
+            return orbitTile;
+          }
+        });
+      } else if (snapshot.hasError) {
+        return Text('${snapshot.error}');
+      }
+      return const Center(child: CircularProgressIndicator());
+    },
+      ),
+        )
+      ),
+    );
   }
 }
 

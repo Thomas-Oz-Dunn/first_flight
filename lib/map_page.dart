@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image/image.dart' as im;
 import 'dart:math';
@@ -5,6 +6,8 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
+
+const DEG_TO_RAD = pi / 180;
 
 class MapPage extends StatefulWidget {
   const MapPage({super.key});
@@ -14,9 +17,12 @@ class MapPage extends StatefulWidget {
 }
 
 class _MapPageState extends State<MapPage> {
-  NetworkImage imageProvider = const NetworkImage(
-    'https://djlorenz.github.io/astronomy/lp2022/world2022_low3.png'
-  );
+  // NetworkImage imageProvider = const NetworkImage(
+  //   'https://djlorenz.github.io/astronomy/lp2022/world2022_low3.png'
+  // );
+  // FileImage imageProvider = FileImage(File('lib/world_light_pollution.png'));
+
+  FileImage imageProvider = FileImage(File('lib/world_light_pollution_mercator.png'));
 
   late Future<Position> futurePosition;
   LatLng defaultLatLon = LatLng(0, 0);
@@ -33,15 +39,15 @@ class _MapPageState extends State<MapPage> {
       'C:\\Users\\tomde\\Projects\\first_flight\\first_flight\\lib\\world_light_pollution.png'
       ).then(
       (value) {
-        im.Image imb = projectMercator(value!, lightPolutionBounds);
-        im.writeFile(
+        im.Image imb = projectMercatorImage(value!, lightPolutionBounds);
+        im.encodePngFile(
           'C:\\Users\\tomde\\Projects\\first_flight\\first_flight\\lib\\world_light_pollution_mercator.png', 
-          imb.getBytes()
+          imb
         );
       }
     );
-
   }
+
   @override
   void initState() {
     // init the position using the user location, TODO toggle in settings
@@ -77,7 +83,7 @@ class _MapPageState extends State<MapPage> {
       body: FlutterMap(
         options: MapOptions(
           initialCenter: defaultLatLon, 
-          initialZoom: 4,
+          initialZoom: 2,
           onTap:(tapPosition, point) {
             if (lightPollution){
               // TODO-TD: Find nearest trajectory, tolerance?
@@ -102,8 +108,9 @@ class _MapPageState extends State<MapPage> {
             ],
           ),
           generateTrajectoryLayer([
-            const [LatLng(0, 0), LatLng(1, 1), LatLng(10, 10)],
             const [LatLng(45, 45), LatLng(50, 41), LatLng(70, 30)],
+            const [LatLng(-20, 0), LatLng(20, 0)],
+            const [LatLng(0, -20), LatLng(0, 20)],
           ]),
           RichAttributionWidget(
             attributions: [
@@ -139,43 +146,67 @@ PolylineLayer generateTrajectoryLayer(
 }
 
 
-im.Image projectMercator(
+im.Image projectMercatorImage(
   im.Image image,
   LatLngBounds bounds,
 ){
-  double latCenter = bounds.center.latitude;
-
-  double latNW = bounds.northWest.latitude;
-
-  double latSE = bounds.southEast.latitude;
+  double latN = 75;
+  double latS = -65;
+  double latCenter = (latN + latS) / 2;
+  double latDegExtent = latN - latS;
 
   for (final frame in image.frames) {
-    var newFrame = frame.clone(noAnimation: true);
-    double h = frame.height - 1;
-
+    var orig = frame.clone(noAnimation: true);
+    double ny = frame.height - 1;
     int cy = frame.height ~/ 2;
   
-    for (final newPixel in newFrame) {
-      var normFromCenter = (newPixel.y - cy) / h; 
-      double nwLat = normFromCenter * (latNW - latSE) + latCenter;
-      double origX = newPixel.x - 0.0;
-      double t = tan(pi / 4 + nwLat * pi / 360);
-      double origY = log(t) / (2 * pi) * h + cy;
+    for (final newPixel in frame) {
 
-      final p2 = frame.getPixelInterpolate(
-        origX, 
-        origY, 
-        interpolation: im.Interpolation.nearest
+      double origY = mercatorPixelProj(
+        newPixel.y, 
+        cy, 
+        ny, 
+        latDegExtent, 
+        latCenter
       );
 
-      newPixel
-        ..r = p2.r
-        ..g = p2.g
-        ..b = p2.b;
+      final p2 = orig.getPixelInterpolate(
+        newPixel.x - 0.0, 
+        origY, 
+        interpolation: im.Interpolation.linear
+      );
+
+      newPixel.setRgba(
+        p2.r, 
+        p2.g, 
+        p2.b,
+        p2.a
+      );
+
     }
 
   }
   return image;
 
+}
+
+double mercatorPixelProj(
+  int iy, 
+  int cy, 
+  double ny, 
+  double latDegExtent, 
+  double latCenter
+) {
+  double normFromCenter = (iy - cy) / ny; 
+  double latDeg = normFromCenter * latDegExtent + latCenter;
+  double latRad = latDeg * DEG_TO_RAD;
+  
+  double newLatRad = 2 * atan(pow(e, latRad)) - pi / 2;
+  
+  double srcLatDeg = newLatRad / DEG_TO_RAD - latCenter;
+  double normFromCenterDeg = srcLatDeg / latDegExtent;
+  double origY = normFromCenterDeg * ny + cy;
+
+  return origY;
 }
 

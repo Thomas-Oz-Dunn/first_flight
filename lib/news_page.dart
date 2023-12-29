@@ -161,44 +161,9 @@ class _NewsPageState extends State<NewsPage> {
       },
     );
 
-    var newsButtonOptions = [
-      MenuItemButton(
-        onPressed: () => setState(() {
-          daysBack = 1;
-          futureArticles = querySpaceFlightNews(daysBack);
-        }),
-        child: const Text('Past 24 hours'),
-      ),
-      MenuItemButton(
-        onPressed: () => setState(() {
-          daysBack = 2;
-          futureArticles = querySpaceFlightNews(daysBack);
-        }),
-        child: const Text('Past 48 hours'),
-      ),
-    ];
-
     return Scaffold(
         appBar: AppBar(
           title: const Text("What's new"),
-          actions: [
-            MenuAnchor(
-                menuChildren: newsButtonOptions,
-                builder: (BuildContext context, MenuController newsController,
-                    Widget? child) {
-                  var menuButton = IconButton(
-                    icon: const Icon(Icons.timelapse),
-                    onPressed: () {
-                      if (newsController.isOpen) {
-                        newsController.close();
-                      } else {
-                        newsController.open();
-                      }
-                    },
-                  );
-                  return menuButton;
-                })
-          ],
         ),
         body: Container(
           padding: const EdgeInsets.symmetric(horizontal: 20.0),

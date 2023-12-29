@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-
+import 'package:share_plus/share_plus.dart';
 // import 'package:first_flight/src/rust/api/simple.dart';
 import 'package:latlong2/latlong.dart';
 
@@ -122,10 +122,18 @@ Future<List<Orbit>> fetchOrbits(String url) async {
   }
 }
 
+void addNotify(String name){
+  // TODO-TD: Send to FCM
+  // TODO-TD: Check if already receiving notification
+
+}
+
+
 class OrbitPage extends StatelessWidget {
   final Orbit orbit;
 
   const OrbitPage({super.key, required this.orbit});
+  
 
   // Pass in Orbit object
   @override
@@ -134,11 +142,22 @@ class OrbitPage extends StatelessWidget {
       appBar: AppBar(title: Text(orbit.objectName)),
       body: ListView(children: [
         const Divider(),
-        const Text('TODO: Picture'),
-        const Divider(),
-        const Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [Text('TODO: View, Favorite, Share, Notify Buttons')]),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+              Row(children: [
+                IconButton(
+                  onPressed: () {
+                    Share.share('${orbit.objectName} ${orbit.describe()}');
+                  }, 
+                  icon: const Icon(Icons.share)
+                ),
+                IconButton(
+                  onPressed: () => addNotify(orbit.objectName), 
+                  icon: const Icon(Icons.notification_add)
+                ),
+              ],)
+          ]),
         const Divider(),
         const Text('Next Passes List: TODO'),
         const Divider(),
