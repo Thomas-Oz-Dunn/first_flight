@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:first_flight/src/rust/frb_generated.dart';
+// import 'package:first_flight/src/rust/frb_generated.dart';
 
 import 'favorites_page.dart';
 import 'theme_handle.dart';
@@ -20,7 +20,7 @@ enum SampleItem { load, favorite, remove, share }
 void main() async {
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
-  await RustLib.init();
+  // await RustLib.init();
   runApp(const SecondFlightApp());
 }
 

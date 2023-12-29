@@ -14,11 +14,34 @@ class MapPage extends StatefulWidget {
 }
 
 class _MapPageState extends State<MapPage> {
+  NetworkImage imageProvider = const NetworkImage(
+    'https://djlorenz.github.io/astronomy/lp2022/world2022_low3.png'
+  );
+
   late Future<Position> futurePosition;
   LatLng defaultLatLon = LatLng(0, 0);
 
   bool lightPollution = true;
 
+  LatLngBounds lightPolutionBounds = LatLngBounds(
+    const LatLng(75, -180),
+    const LatLng(-65, 180),
+  );
+
+  runProjection(){
+    im.decodePngFile(
+      'C:\\Users\\tomde\\Projects\\first_flight\\first_flight\\lib\\world_light_pollution.png'
+      ).then(
+      (value) {
+        im.Image imb = projectMercator(value!, lightPolutionBounds);
+        im.writeFile(
+          'C:\\Users\\tomde\\Projects\\first_flight\\first_flight\\lib\\world_light_pollution_mercator.png', 
+          imb.getBytes()
+        );
+      }
+    );
+
+  }
   @override
   void initState() {
     // init the position using the user location, TODO toggle in settings
@@ -32,6 +55,8 @@ class _MapPageState extends State<MapPage> {
 
   @override
   Widget build(context) {
+    runProjection();
+
     // TODO-TD: `map` button calculates and redirects here
     // TODO-TD: Display overpasses of favorites
     var mapPage = Scaffold(
@@ -50,7 +75,17 @@ class _MapPageState extends State<MapPage> {
         ),
       ]),
       body: FlutterMap(
-        options: MapOptions(initialCenter: defaultLatLon, initialZoom: 4),
+        options: MapOptions(
+          initialCenter: defaultLatLon, 
+          initialZoom: 4,
+          onTap:(tapPosition, point) {
+            if (lightPollution){
+              // TODO-TD: Find nearest trajectory, tolerance?
+              point.latitude;
+              point.longitude;
+            }
+          },
+        ),
         children: [
           TileLayer(
             urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
@@ -60,27 +95,22 @@ class _MapPageState extends State<MapPage> {
             overlayImages: [
               OverlayImage(
                 opacity: lightPollution ? 0.5 : 0,
-                bounds: LatLngBounds(
-                  const LatLng(75, -180),
-                  const LatLng(-65, 180),
-                ),
+                bounds: lightPolutionBounds,
                 // TODO-TD: Project to Mercator
-                // TODO-TD: on tap return brightness value
-                imageProvider: const NetworkImage(
-                    'https://djlorenz.github.io/astronomy/lp2022/world2022_low3.png'),
+                imageProvider: imageProvider,
               ),
             ],
           ),
           generateTrajectoryLayer([
-            [LatLng(0, 0), LatLng(1, 1), LatLng(10, 10)],
-            [LatLng(90, 45), LatLng(91, 41), LatLng(95, 30)],
+            const [LatLng(0, 0), LatLng(1, 1), LatLng(10, 10)],
+            const [LatLng(45, 45), LatLng(50, 41), LatLng(70, 30)],
           ]),
           RichAttributionWidget(
             attributions: [
               TextSourceAttribution(
                 'OpenStreetMap contributors',
                 onTap: () =>
-                    launchUrl(Uri.parse('https://openstreetmap.org/copyright')),
+                  launchUrl(Uri.parse('https://openstreetmap.org/copyright')),
               ),
             ],
           ),
@@ -109,7 +139,6 @@ PolylineLayer generateTrajectoryLayer(
 }
 
 
-
 im.Image projectMercator(
   im.Image image,
   LatLngBounds bounds,
@@ -117,33 +146,32 @@ im.Image projectMercator(
   double latCenter = bounds.center.latitude;
 
   double latNW = bounds.northWest.latitude;
-  double lonNW = bounds.northWest.longitude;
 
   double latSE = bounds.southEast.latitude;
-  double lonSE = bounds.southEast.longitude;
 
   for (final frame in image.frames) {
-    final orig = frame.clone(noAnimation: true);
-    double w = frame.width - 1;
+    var newFrame = frame.clone(noAnimation: true);
     double h = frame.height - 1;
 
-    int cx = frame.width ~/ 2;
     int cy = frame.height ~/ 2;
-    
-    double nCntX = 2 * (cx / w) - 1;
-    double nCntY = 2 * (cy / h) - 1;
-    
-    for (final p in frame) {
-      
-      var lat = (p.y - cy) / nCntY * (latNW - latSE) / 2 + latCenter;
-      final x = ((p.x - cx) / nCntX * (lonSE - lonNW) / 2) / (2*pi);
-      final y = log(tan(pi / 4 + lat / 2)) / (2*pi);
-      final p2 = orig.getPixelInterpolate(x, y, interpolation: im.Interpolation.nearest);
+  
+    for (final newPixel in newFrame) {
+      var normFromCenter = (newPixel.y - cy) / h; 
+      double nwLat = normFromCenter * (latNW - latSE) + latCenter;
+      double origX = newPixel.x - 0.0;
+      double t = tan(pi / 4 + nwLat * pi / 360);
+      double origY = log(t) / (2 * pi) * h + cy;
 
-        p
-          ..r = p2.r
-          ..g = p2.g
-          ..b = p2.b;
+      final p2 = frame.getPixelInterpolate(
+        origX, 
+        origY, 
+        interpolation: im.Interpolation.nearest
+      );
+
+      newPixel
+        ..r = p2.r
+        ..g = p2.g
+        ..b = p2.b;
     }
 
   }
