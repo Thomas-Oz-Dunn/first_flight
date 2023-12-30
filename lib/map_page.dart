@@ -35,6 +35,8 @@ class _MapPageState extends State<MapPage> {
   );
 
   runProjection(){
+
+    // TODO-TD: Investigate why black and white
     im.decodePngFile(
       'C:\\Users\\tomde\\Projects\\first_flight\\first_flight\\lib\\world_light_pollution.png'
       ).then(
@@ -102,7 +104,6 @@ class _MapPageState extends State<MapPage> {
               OverlayImage(
                 opacity: lightPollution ? 0.5 : 0,
                 bounds: lightPolutionBounds,
-                // TODO-TD: Project to Mercator
                 imageProvider: imageProvider,
               ),
             ],
@@ -162,20 +163,21 @@ im.Image projectMercatorImage(
   
     for (final newPixel in frame) {
 
-      double origY = mercatorPixelProj(
-        newPixel.y, 
-        cy, 
-        ny, 
-        latDegExtent, 
-        latCenter
-      );
+      double normFromCenter = newPixel.yNormalized - 0.5; 
+      double latDeg = normFromCenter * latDegExtent + latCenter;
+      double latRad = latDeg * DEG_TO_RAD;
+
+      double newLatRad = 2 * atan(pow(e, latRad)) - pi / 2;
+
+      double srcLatDeg = newLatRad / DEG_TO_RAD - latCenter;
+      double normFromCenterDeg = srcLatDeg / latDegExtent;
+      double origY = normFromCenterDeg * ny;
 
       final p2 = orig.getPixelInterpolate(
         newPixel.x - 0.0, 
         origY, 
         interpolation: im.Interpolation.linear
       );
-
       newPixel.setRgba(
         p2.r, 
         p2.g, 
@@ -189,24 +191,3 @@ im.Image projectMercatorImage(
   return image;
 
 }
-
-double mercatorPixelProj(
-  int iy, 
-  int cy, 
-  double ny, 
-  double latDegExtent, 
-  double latCenter
-) {
-  double normFromCenter = (iy - cy) / ny; 
-  double latDeg = normFromCenter * latDegExtent + latCenter;
-  double latRad = latDeg * DEG_TO_RAD;
-  
-  double newLatRad = 2 * atan(pow(e, latRad)) - pi / 2;
-  
-  double srcLatDeg = newLatRad / DEG_TO_RAD - latCenter;
-  double normFromCenterDeg = srcLatDeg / latDegExtent;
-  double origY = normFromCenterDeg * ny + cy;
-
-  return origY;
-}
-
