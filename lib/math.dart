@@ -74,3 +74,79 @@ double calcPrimeVertical(double latDeg) {
     var radius = RADIUS_EQUATOR / radScale;
     return radius;
 }
+
+
+bool isEclipsedByEarth(
+    Vector3 pEci,
+    DateTime dateTime,
+){  
+    var j2000Days = datetimeToj2000days(dateTime);
+    var sunEci = calcSunNormEciVec(j2000Days);
+    var beta = asin(dot3(sunEci, pEci));
+    // TODO-TD: increase precision in radius calculation
+    var betaEclipse = pi - asin((RADIUS_EQUATOR / pEci.normalize()));
+    return beta > betaEclipse;
+}
+
+
+Vector3 calcSunNormEciVec(double j2000Days){
+    double meanLonDeg = 280.460 + 0.98560028 * j2000Days;
+    double meanAnom = J2000_EARTH_MEAN_ANOMALY + EARTH_MEAN_ANOMALY_PER_JDAY * j2000Days;
+    double u1deg = 1.9148 * sin(meanAnom);
+    double u2deg = 0.02 * sin(2.0 * meanAnom);
+    double eclipticLon = (meanLonDeg + u1deg + u2deg) * pi / 180.0;
+    double obliquity = -(AXIAL_TILT + EARTH_AXIAL_TILT_PET_JDAY * j2000Days);
+    double ecixnorm = cos(eclipticLon);
+    double eciynorm = sin(eclipticLon) * cos(obliquity);
+    double eciznorm = sin(eclipticLon) * sin(obliquity);
+
+    return Vector3(ecixnorm, eciynorm, eciznorm);
+}
+
+
+
+Vector3 ecefToLla(Vector3 ecef){
+    // Zhu's method
+    double a = RADIUS_EQUATOR;
+    double b = RADIUS_EQUATOR * sqrt((1.0 - pow(SURFACE_ECC, 2)));
+    double ecc2 = (pow(a, 2) - pow(b,2)) / pow(a,2);
+    double ecc_2Prime = pow(a,2) / pow(b,2) - 1.0;
+    double x = ecef[0] / 1000.0;
+    double y = ecef[1] / 1000.0;
+    double z = ecef[2] / 1000.0;
+    double p = sqrt((pow(x,2) + pow(y,2)));
+    double g = pow(p,2) + (1.0 - ecc2) * pow(z,2) - ecc2 * (pow(a,2) - pow(b,2));
+    double f = 54.0 * pow(b,2) * pow(z,2);
+    double c = pow(ecc2,2) * f * pow(p,2) / (pow(g,3));
+    num s = pow(1.0 + c + sqrt((pow(c,2) + 2.0 * c)) , (1.0 / 3.0));
+    double P = f / (3.0 * pow((s + 1.0 + 1.0 / s),2) * pow(g,2));
+    double q = sqrt((1.0 + 2.0 * pow(ecc2,2) * P));
+    double r_0_2_1 = (pow(a,2)/2.0) * (1.0 + 1.0 / q);
+    double r_0_2_2 = (1.0 - ecc2) * pow(z,2) / (q * (1.0 + q)) - (pow(p,2)/2.0);
+    double r_0_2 = r_0_2_1 - P * r_0_2_2;
+    double r_0 = - P * ecc2 * p /(1.0 + q) + sqrt((r_0_2));
+    double u = sqrt((pow((p - (ecc2 * r_0)),2) + pow(z,2)));
+    double v = sqrt((pow((p - (ecc2 * r_0)),2) + (1.0 - ecc2) * pow(z,2)));
+    double z_0 = pow(b,2) * z / (a * v);
+    double lat = atan2((z + ecc_2Prime * z_0),p) * 180.0 / pi;
+    double lon =  atan2(y,x) * 180.0 / pi;
+    double alt = u * (1.0 - pow(b,2) / (a * v));
+
+    return Vector3(lat, lon, alt);
+}
+
+
+Vector3 ecefToEnu(
+    Vector3 pLla, 
+    Vector3 pTgtEcef
+) {
+    var observerEcef = llhToEcef(pLla);
+    var vecEcef = pTgtEcef - observerEcef;
+    var ecefToEnu = Matrix3(
+        -sin(pLla[1]), cos(pLla[1]), 0.0,
+        -cos(pLla[1])*sin(pLla[0]), -sin(pLla[1])*sin(pLla[0]), cos(pLla[0]),
+        cos(pLla[1])*cos(pLla[0]), sin(pLla[1])*cos(pLla[0]), sin(pLla[0]));
+    return ecefToEnu * vecEcef;
+}
+
+
