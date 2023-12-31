@@ -28,8 +28,8 @@ class SkyBox extends StatefulWidget {
     super.key,
     required this.image,
     this.fov = 60,
-    this.perspective = 0.3,
-    this.sensitivity = 0.1,
+    this.perspective = 0.4,
+    this.sensitivity = 0.2,
     this.child,
   });
 
@@ -243,6 +243,8 @@ class _ViewPageState extends State<ViewPage> {
                 children: [
                   /// Full screen sky box.
                   Positioned.fill(
+                    // TODO-TD: integrate gryoscope readings
+                    // TODO-TD: display passes
                     child: SkyBox(
                       image: snapshot.data!,
                     ),
@@ -250,7 +252,6 @@ class _ViewPageState extends State<ViewPage> {
                 ],
               );
             }
-            /// Show loading indicator while image is loading.
             return const Center(child: CircularProgressIndicator());
           },
         ),

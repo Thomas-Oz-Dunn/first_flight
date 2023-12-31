@@ -163,7 +163,7 @@ im.Image projectMercatorImage(
   
     for (final newPixel in frame) {
 
-      double normFromCenter = newPixel.yNormalized - 0.5; 
+      double normFromCenter = (newPixel.y - cy) / ny; 
       double latDeg = normFromCenter * latDegExtent + latCenter;
       double latRad = latDeg * DEG_TO_RAD;
 
@@ -171,7 +171,7 @@ im.Image projectMercatorImage(
 
       double srcLatDeg = newLatRad / DEG_TO_RAD - latCenter;
       double normFromCenterDeg = srcLatDeg / latDegExtent;
-      double origY = normFromCenterDeg * ny;
+      double origY = normFromCenterDeg * ny + cy;
 
       final p2 = orig.getPixelInterpolate(
         newPixel.x - 0.0, 
