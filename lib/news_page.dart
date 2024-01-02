@@ -148,11 +148,11 @@ class _NewsPageState extends State<NewsPage> {
                         Share.share('$newsSite: $title ${article.url}');
                       },
                     ),
-                    // TODO-TD: link related satellites to each article
                   );
                   return newsTile;
                 }
-              });
+              }
+            );
         } else if (snapshot.hasError) {
           return Text('${snapshot.error}');
         }
@@ -162,12 +162,13 @@ class _NewsPageState extends State<NewsPage> {
     );
 
     return Scaffold(
-        appBar: AppBar(
-          title: const Text("What's new"),
-        ),
-        body: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 20.0),
-          child: newsFeedBuilder,
-        ));
+      appBar: AppBar(
+        title: const Text("What's new"),
+      ),
+      body: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20.0),
+        child: newsFeedBuilder,
+      )
+    );
   }
 }

@@ -108,7 +108,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
             onPressed: () => setState(() {
               // TODO-TD: store list of orbits being viewed
             }),
-            child: const Text('Map'),
+            child: const Text('View'),
           ),
           MenuItemButton(
             onPressed: () => setState(() {

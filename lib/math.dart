@@ -83,7 +83,6 @@ bool isEclipsedByEarth(
     var j2000Days = datetimeToj2000days(dateTime);
     var sunEci = calcSunNormEciVec(j2000Days);
     var beta = asin(dot3(sunEci, pEci));
-    // TODO-TD: increase precision in radius calculation
     var betaEclipse = pi - asin((RADIUS_EQUATOR / pEci.normalize()));
     return beta > betaEclipse;
 }
