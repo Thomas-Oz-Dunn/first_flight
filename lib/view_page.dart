@@ -1,27 +1,20 @@
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'dart:math';
-import 'package:vector_math/vector_math_64.dart' as vector;
+import 'package:vector_math/vector_math_64.dart';
 import 'package:flutter/services.dart' show rootBundle;
 
 class SkyBox extends StatefulWidget {
   final ui.Image image;
 
   /// The field of view of the sky box.
-  /// The default value is 60.
   final double fov;
-
   /// The perspective of the sky box.
-  /// The default value is 0.3.
   final double perspective;
-
   /// The sensitivity of the sky box panning.
-  /// The default value is 0.1.
   final double sensitivity;
-
   /// The child widget.
   /// This widget will be drawn on top of the sky box.
-  /// The default value is null.
   final Widget? child;
 
   const SkyBox({
@@ -38,6 +31,9 @@ class SkyBox extends StatefulWidget {
 }
 
 class _SkyBoxState extends State<SkyBox> {
+  // TODO-TD: integrate gryoscope readings for pitch and yaw
+  // Use gesture detector if device has no gyrscope access
+
   double _pitch = 0;
   double _yaw = 0;
 
@@ -82,31 +78,23 @@ class SkyBoxPainter extends CustomPainter {
     required this.image,
     required this.pitch,
     required this.yaw,
-    this.fov = 150,
+    this.fov = 120,
     this.perspective = 0.01,
   });
 
   @override
   void paint(Canvas canvas, Size size) {
     /// FOV scaling factor.
-    /// The higher the FOV, the smaller the scaling factor.
-    final scale = 1 / tan(vector.radians(fov / 2) * (pi / 180));
+    final scale = 1 / tan(radians(fov / 2) * (pi / 180));
 
     final transform = Matrix4.identity()
-    
-      /// Perspective
       ..setEntry(3, 2, perspective)
-
-      /// FOV
       ..setEntry(0, 0, scale)
       ..setEntry(1, 1, scale)
-
-      /// Set rotation
-      ..rotateX(vector.radians(-pitch))
-      ..rotateY(vector.radians(yaw));
+      ..rotateX(radians(-pitch))
+      ..rotateY(radians(yaw));
 
     /// Size of the sky box.
-    /// The height is used as the size of the sky box.
     final double dim = size.height.toDouble();
     final double dim2 = dim / 2;
 
@@ -149,51 +137,55 @@ class SkyBoxPainter extends CustomPainter {
     }
   }
 
-  List<_Face> _createFaces(Matrix4 transform, double size) {
+  List<_Face> _createFaces(
+    Matrix4 transform, 
+    double size
+  ) {
     return [
       /// Front
       _Face(
-        transform.clone()..translate(vector.Vector3(0, 0, size)),
+        transform.clone()
+          ..translate(Vector3(0, 0, size)),
         const Offset(1, 1),
       ),
 
       /// Right
       _Face(
         transform.clone()
-          ..translate(vector.Vector3(size, 0, 0))
-          ..rotateY(vector.radians(90)),
+          ..translate(Vector3(size, 0, 0))
+          ..rotateY(radians(90)),
         const Offset(2, 1),
       ),
 
       /// Back
       _Face(
         transform.clone()
-          ..translate(vector.Vector3(0, 0, -size))
-          ..rotateY(vector.radians(180)),
+          ..translate(Vector3(0, 0, -size))
+          ..rotateY(radians(180)),
         const Offset(3, 1),
       ),
 
       /// Left
       _Face(
         transform.clone()
-          ..translate(vector.Vector3(-size, 0, 0))
-          ..rotateY(vector.radians(270)),
+          ..translate(Vector3(-size, 0, 0))
+          ..rotateY(radians(270)),
         const Offset(0, 1),
       ),
 
       /// Bottom
       _Face(
         transform.clone()
-          ..translate(vector.Vector3(0, size, 0))
-          ..rotateX(vector.radians(270)),
+          ..translate(Vector3(0, size, 0))
+          ..rotateX(radians(270)),
         const Offset(1, 2),
       ),
 
       /// Top
       _Face(
         transform.clone()
-          ..translate(vector.Vector3(0, -size, 0))
-          ..rotateX(vector.radians(90)),
+          ..translate(Vector3(0, -size, 0))
+          ..rotateX(radians(90)),
         const Offset(1, 0),
       ),
     ];
@@ -219,7 +211,6 @@ class ViewPage extends StatefulWidget {
 class _ViewPageState extends State<ViewPage> {
 
   Future<ui.Image> _image(String path) {
-    /// Load image from assets.
     return rootBundle.load(path).then((bytes) {
       return ui.instantiateImageCodec(
         bytes.buffer.asUint8List()
@@ -238,13 +229,11 @@ class _ViewPageState extends State<ViewPage> {
           future: _image('lib/Skybox.png'),
           builder: (context, snapshot) {
             if (snapshot.hasData) {
-              /// Pass images to sky box.
               return Stack(
                 children: [
                   /// Full screen sky box.
                   Positioned.fill(
-                    // TODO-TD: integrate gryoscope readings
-                    // TODO-TD: display passes
+                    // TODO-TD: display view and favorite passes
                     child: SkyBox(
                       image: snapshot.data!,
                     ),
@@ -252,7 +241,9 @@ class _ViewPageState extends State<ViewPage> {
                 ],
               );
             }
-            return const Center(child: CircularProgressIndicator());
+            return const Center(
+              child: CircularProgressIndicator()
+            );
           },
         ),
       );

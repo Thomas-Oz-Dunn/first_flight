@@ -3,8 +3,6 @@ import 'package:provider/provider.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-// import 'package:first_flight/src/rust/frb_generated.dart';
-
 import 'favorites_page.dart';
 import 'theme_handle.dart';
 import 'settings_page.dart';
@@ -15,13 +13,13 @@ import 'map_page.dart';
 
 const FAVORITES_KEY = "Favorites";
 const HISTORY_KEY = "History";
+const viewingsKey = "Viewings";
 
 enum SampleItem { load, favorite, remove, share }
 
 void main() async {
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
-  // await RustLib.init();
   runApp(const SecondFlightApp());
 }
 
@@ -31,31 +29,39 @@ class SecondFlightApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-        create: (_) => ModelThemeProvider(),
-        child: Consumer<ModelThemeProvider>(
-            builder: (context, ModelThemeProvider themeNotifier, child) {
+      create: (_) => ModelThemeProvider(),
+      child: Consumer<ModelThemeProvider>(
+        builder: (
+          context, 
+          ModelThemeProvider themeNotifier, 
+          child
+        ) {
           return MaterialApp(
             title: 'Second Flight',
             theme: themeNotifier.isDark
-                ? ThemeData(
-                    brightness: Brightness.dark,
-                    primaryColor: Colors.black,
-                    colorScheme: const ColorScheme.highContrastDark(
-                      primary: Colors.black87,
-                      primaryContainer: Colors.black45,
-                      secondary: Color.fromARGB(255, 74, 20, 140),
-                      secondaryContainer: Color.fromARGB(255, 55, 71, 79),
-                    ),
-                    useMaterial3: true)
-                : ThemeData(
-                    brightness: Brightness.light,
-                    primaryColor: Colors.blue,
-                    primarySwatch: Colors.blueGrey,
-                    useMaterial3: true),
+              ? ThemeData(
+                brightness: Brightness.dark,
+                primaryColor: Colors.black,
+                colorScheme: const ColorScheme.highContrastDark(
+                  primary: Colors.black87,
+                  primaryContainer: Colors.black45,
+                  secondary: Color.fromARGB(255, 74, 20, 140),
+                  secondaryContainer: Color.fromARGB(255, 55, 71, 79),
+                ),
+                useMaterial3: true
+              )
+              : ThemeData(
+                  brightness: Brightness.light,
+                  primaryColor: Colors.blue,
+                  primarySwatch: Colors.blueGrey,
+                  useMaterial3: true
+              ),
             debugShowCheckedModeBanner: false,
             home: const MainPage(),
           );
-        }));
+        }
+      )
+    );
   }
 }
 
@@ -71,7 +77,6 @@ class _MainPageState extends State<MainPage> {
   late Future<List<Orbit>> futureSearchOrbits;
   late Future<List<Orbit>> futureExploreOrbits;
 
-
   String celestrakSite = "https://celestrak.org/NORAD/elements/gp.php?";
   String celestrakName = "NAME=";
   String celestrakJsonFormat = "&FORMAT=JSON";
@@ -83,6 +88,7 @@ class _MainPageState extends State<MainPage> {
 
   SharedPreferences? preferences;
 
+  List<String> viewings = [];
   List<String> history = [];
   List<String> favorites = [];
 
@@ -118,9 +124,12 @@ class _MainPageState extends State<MainPage> {
 
   @override
   void dispose() {
+    clearViewings();
     _searchController.dispose();
     super.dispose();
   }
+
+  // Memory managment
 
   Future<void> initStorage() async {
     preferences = await SharedPreferences.getInstance();
@@ -151,6 +160,17 @@ class _MainPageState extends State<MainPage> {
     setState(() {});
   }
 
+  void loadViewings() {
+    List<String>? savedData = preferences?.getStringList(viewingsKey);
+
+    if (savedData == null) {
+      preferences?.setStringList(viewingsKey, viewings);
+    } else {
+      viewings = savedData;
+    }
+    setState(() {});
+  }
+
   void _addFavorite(name) {
     favorites.add(name);
     preferences?.setStringList(FAVORITES_KEY, favorites);
@@ -163,11 +183,24 @@ class _MainPageState extends State<MainPage> {
     setState(() {});
   }
 
+  void _addToViewings(name) {
+    viewings.add(name);
+    preferences?.setStringList(viewingsKey, viewings);
+    setState(() {});
+  }
+
   void _removeFromHistory(name) {
     history.remove(name);
     preferences?.setStringList(HISTORY_KEY, history);
     setState(() {});
   }
+
+  void clearViewings() async {
+    await preferences?.remove(viewingsKey);
+    setState(() {});
+  }
+
+  // Internet
 
   Future<List<Orbit>> queryCelestrak(String name) {
     String query = celestrakSite + celestrakName + name + celestrakJsonFormat;
@@ -214,47 +247,48 @@ class _MainPageState extends State<MainPage> {
             MenuItemButton(
               onPressed: () => setState(() {
                 _removeFromHistory(history[backIdx]);
-                // TODO-TD: refresh view of page
+                // TODO-TD: refresh view of page after removed
               }),
               child: const Text('Remove'),
             ),
           ];
 
           var historyTiles = ListTile(
-              title: Text(history[backIdx]),
-              trailing: MenuAnchor(
-                  menuChildren: buttonOptions,
-                  builder: (BuildContext context, MenuController controller,
-                      Widget? child) {
-                    var menuButton = IconButton(
-                      icon: const Icon(Icons.more_vert),
-                      onPressed: () {
-                        if (controller.isOpen) {
-                          controller.close();
-                        } else {
-                          controller.open();
-                        }
-                      },
-                    );
-                    return menuButton;
-                  }));
+            title: Text(history[backIdx]),
+            trailing: MenuAnchor(
+              menuChildren: buttonOptions,
+              builder: (
+                BuildContext context, 
+                MenuController controller,
+                Widget? child) {
+                  var menuButton = IconButton(
+                    icon: const Icon(Icons.more_vert),
+                    onPressed: () {
+                      if (controller.isOpen) {
+                        controller.close();
+                      } else {
+                        controller.open();
+                      }
+                    },
+                  );
+                  return menuButton;
+                }
+              )
+            );
           return historyTiles;
         }
       },
     );
 
-    // view
-    // TODO-TD: Interface with gyroscope for celestial sphere
     var homePage = Scaffold(
       appBar: AppBar(
         leading: settingsButton,
         title: const Text('SaTrack'),
         actions: [favoritesButton],
       ),
-      body: ViewPage(),
+      body: const ViewPage(),
     );
 
-    // history
     var historyPage = Scaffold(
         appBar: AppBar(title: const Text('Search History')),
         body: historyListBuilder);
@@ -303,7 +337,7 @@ class _MainPageState extends State<MainPage> {
               onPressed: () => setState(() {
                 // TODO-TD: store list of orbits to be viewed and mapped
               }),
-              child: const Text('Map'),
+              child: const Text('View'),
               ),
             MenuItemButton(
               onPressed: () => setState(() {
@@ -316,35 +350,40 @@ class _MainPageState extends State<MainPage> {
             if (itemIdxs < orbits.length) {
               Orbit orbit = orbits[itemIdxs];
               var orbitTile = ListTile(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => OrbitPage(orbit: orbit)),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => OrbitPage(orbit: orbit)),
                     );
                   },
                   title: Text(orbit.objectName),
-                  // TODO-TD: next pass in subtitle
                   subtitle: Text('Epoch Date Time (UTC): ${orbit.epoch}'),
                   trailing: MenuAnchor(
-                      menuChildren: buttonOptions,
-                      builder: (BuildContext context, MenuController controller,
-                          Widget? child) {
-                        var menuButton = IconButton(
-                          icon: const Icon(Icons.more_vert),
-                          onPressed: () {
-                            if (controller.isOpen) {
-                              controller.close();
-                            } else {
-                              controller.open();
-                            }
-                          },
-                        );
-                        return menuButton;
-                      }));
+                    menuChildren: buttonOptions,
+                    builder: (
+                      BuildContext context, 
+                      MenuController controller,
+                      Widget? child
+                    ) {
+                      var menuButton = IconButton(
+                        icon: const Icon(Icons.more_vert),
+                        onPressed: () {
+                          if (controller.isOpen) {
+                            controller.close();
+                          } else {
+                            controller.open();
+                          }
+                        },
+                      );
+                      return menuButton;
+                    }
+                  )
+                );
                 return orbitTile;
               }
-            });
+            }
+          );
           } else if (snapshot.hasError) {
             return Text('${snapshot.error}');
           }
@@ -504,7 +543,7 @@ class _MainPageState extends State<MainPage> {
                   );
                 },
                 title: Text(orbit.objectName),
-                // TODO-TD: next pass in subtitle
+                // TODO-TD: include next pass datetime in subtitle
                 subtitle: Text('Epoch Date Time (UTC): ${orbit.epoch}'),
                 trailing: MenuAnchor(
                     menuChildren: buttonOptions,

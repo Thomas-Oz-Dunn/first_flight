@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class MyThemePreferences {
-  static const THEME_KEY = "theme_key";
+const THEME_KEY = "theme_key";
+const LOCATION_KEY = "LocationFidelity";
 
-  setTheme(bool value) async {
+class MyPreferences {
+
+  void setTheme(bool value) async {
     SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
     sharedPreferences.setBool(THEME_KEY, value);
   }
 
-  getTheme() async {
+  Future<bool> getTheme() async {
     SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
     return sharedPreferences.getBool(THEME_KEY) ?? false;
   }
@@ -17,12 +19,13 @@ class MyThemePreferences {
 
 class ModelThemeProvider extends ChangeNotifier {
   late bool _isDark;
-  late MyThemePreferences _preferences;
+  late MyPreferences _preferences;
+
   bool get isDark => _isDark;
 
   ModelThemeProvider() {
     _isDark = false;
-    _preferences = MyThemePreferences();
+    _preferences = MyPreferences();
     getPreferences();
   }
 

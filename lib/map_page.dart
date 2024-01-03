@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
 import 'package:image/image.dart' as im;
 import 'dart:math';
@@ -6,6 +7,8 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
+
+import 'theme_handle.dart';
 
 const DEG_TO_RAD = pi / 180;
 
@@ -17,6 +20,8 @@ class MapPage extends StatefulWidget {
 }
 
 class _MapPageState extends State<MapPage> {
+  SharedPreferences? preferences;
+
   // NetworkImage imageProvider = const NetworkImage(
   //   'https://djlorenz.github.io/astronomy/lp2022/world2022_low3.png'
   // );
@@ -25,8 +30,10 @@ class _MapPageState extends State<MapPage> {
   FileImage imageProvider = FileImage(File('lib/world_light_pollution_mercator.png'));
 
   late Future<Position> futurePosition;
-  LatLng defaultLatLon = LatLng(0, 0);
+  LatLng defaultLatLon = const LatLng(0, 0);
 
+  bool defaultLocateFidelityHigh = false;
+  bool isHiFiLocate = false;
   bool lightPollution = true;
 
   LatLngBounds lightPolutionBounds = LatLngBounds(
@@ -34,9 +41,8 @@ class _MapPageState extends State<MapPage> {
     const LatLng(-65, 180),
   );
 
-  runProjection(){
-
-    // TODO-TD: Investigate why black and white
+  void runProjection(){
+    // TODO-TD: Solve why image is loaded in black and white
     im.decodePngFile(
       'C:\\Users\\tomde\\Projects\\first_flight\\first_flight\\lib\\world_light_pollution.png'
       ).then(
@@ -50,45 +56,74 @@ class _MapPageState extends State<MapPage> {
     );
   }
 
+  void loadLocationFidelity(){
+    bool? savedData = preferences?.getBool(LOCATION_KEY);
+
+    if (savedData == null) {
+      preferences?.setBool(LOCATION_KEY, defaultLocateFidelityHigh);
+      isHiFiLocate = defaultLocateFidelityHigh;
+    } else {
+      isHiFiLocate = savedData;
+    }
+    setState(() {});
+  }
+
+  Future<void> initStorage() async {
+    preferences = await SharedPreferences.getInstance();
+    loadLocationFidelity();    
+    setState(() {});
+  }
+
+  Future<void> setPos() async {
+    futurePosition = Geolocator.getCurrentPosition(
+      desiredAccuracy: isHiFiLocate 
+        ? LocationAccuracy.medium 
+        : LocationAccuracy.lowest
+      );
+
+    futurePosition.then((value) => defaultLatLon = LatLng(
+        value.latitude, 
+        value.longitude
+      ));
+      
+    setState(() {});
+  }
+
   @override
   void initState() {
-    // init the position using the user location, TODO toggle in settings
-    futurePosition =
-        Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
-    futurePosition.then(
-        (value) => defaultLatLon = LatLng(value.latitude, value.longitude));
-
+    initStorage();
     super.initState();
   }
 
   @override
   Widget build(context) {
     runProjection();
-
-    // TODO-TD: `map` button calculates and redirects here
-    // TODO-TD: Display overpasses of favorites
+    // TODO-TD: Display overpasses of favorites and view
     var mapPage = Scaffold(
-      appBar: AppBar(title: const Text("Map"), actions: [
-        IconButton(
-          icon: const Icon(Icons.lightbulb),
-          onPressed: () {
-            setState(() {
-              if (lightPollution) {
-                lightPollution = false;
-              } else {
-                lightPollution = true;
-              }
-            });
-          },
-        ),
-      ]),
+      appBar: AppBar(
+        title: const Text("Map"), 
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.lightbulb),
+            onPressed: () {
+              setState(() {
+                if (lightPollution) {
+                  lightPollution = false;
+                } else {
+                  lightPollution = true;
+                }
+              });
+            },
+          ),
+        ]
+      ),
       body: FlutterMap(
         options: MapOptions(
           initialCenter: defaultLatLon, 
           initialZoom: 2,
           onTap:(tapPosition, point) {
             if (lightPollution){
-              // TODO-TD: Find nearest trajectory, tolerance?
+              // TODO-TD: Find nearest trajectory to tap within tolerance to open
               point.latitude;
               point.longitude;
             }
@@ -118,7 +153,9 @@ class _MapPageState extends State<MapPage> {
               TextSourceAttribution(
                 'OpenStreetMap contributors',
                 onTap: () =>
-                  launchUrl(Uri.parse('https://openstreetmap.org/copyright')),
+                  launchUrl(
+                    Uri.parse('https://openstreetmap.org/copyright')
+                  ),
               ),
             ],
           ),
@@ -184,10 +221,7 @@ im.Image projectMercatorImage(
         p2.b,
         p2.a
       );
-
     }
-
   }
   return image;
-
 }

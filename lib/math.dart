@@ -102,8 +102,6 @@ Vector3 calcSunNormEciVec(double j2000Days){
     return Vector3(ecixnorm, eciynorm, eciznorm);
 }
 
-
-
 Vector3 ecefToLla(Vector3 ecef){
     // Zhu's method
     double a = RADIUS_EQUATOR;
