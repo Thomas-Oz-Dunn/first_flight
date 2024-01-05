@@ -2,15 +2,13 @@ import 'dart:io';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
 import 'package:image/image.dart' as im;
-import 'dart:math';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
 
-import 'theme_handle.dart';
-
-const DEG_TO_RAD = pi / 180;
+import '../mem/theme_handle.dart';
+import '../calc/map.dart';
 
 class MapPage extends StatefulWidget {
   const MapPage({super.key});
@@ -35,6 +33,8 @@ class _MapPageState extends State<MapPage> {
   bool defaultLocateFidelityHigh = false;
   bool isHiFiLocate = false;
   bool lightPollution = true;
+
+  late List<List<LatLng>> passes;
 
   LatLngBounds lightPolutionBounds = LatLngBounds(
     const LatLng(75, -180),
@@ -98,7 +98,27 @@ class _MapPageState extends State<MapPage> {
   @override
   Widget build(context) {
     runProjection();
-    // TODO-TD: Display overpasses of favorites and view
+
+    passes = [
+      const [LatLng(45, 45), LatLng(50, 41), LatLng(70, 30)],
+      const [LatLng(-20, 0), LatLng(20, 0)],
+      const [LatLng(0, -20), LatLng(0, 20)],
+    ];
+    // queryCelestrak(name)
+    // Iterable iterable = json.decode(response.body);
+    // return List<Orbit>.from(
+    //   iterable.map(
+    //     (contents) {
+    //       return Orbit.fromJson(contents);
+    //     }
+    //   )
+    // )
+    // var nextDay = 60*60*24
+    // for orbit in orbits{}
+    // calcGroundTrack(calcMotion(orbit, nextDay, DateTime.now()));
+    // TODO-TD: Calculate overpasses of favorites and views
+
+
     var mapPage = Scaffold(
       appBar: AppBar(
         title: const Text("Map"), 
@@ -143,11 +163,7 @@ class _MapPageState extends State<MapPage> {
               ),
             ],
           ),
-          generateTrajectoryLayer([
-            const [LatLng(45, 45), LatLng(50, 41), LatLng(70, 30)],
-            const [LatLng(-20, 0), LatLng(20, 0)],
-            const [LatLng(0, -20), LatLng(0, 20)],
-          ]),
+          generateTrajectoryLayer(passes),
           RichAttributionWidget(
             attributions: [
               TextSourceAttribution(
@@ -166,62 +182,3 @@ class _MapPageState extends State<MapPage> {
   }
 }
 
-
-PolylineLayer generateTrajectoryLayer(
-  List<List<LatLng>> trajectories
-){
-  List<Polyline> lines = trajectories.map(
-    (line){
-      return Polyline(
-        points: line,
-        color: Colors.blue,
-    );}
-  ).toList();
-
-  return PolylineLayer(
-    polylines: lines,
-  );
-}
-
-
-im.Image projectMercatorImage(
-  im.Image image,
-  LatLngBounds bounds,
-){
-  double latN = 75;
-  double latS = -65;
-  double latCenter = (latN + latS) / 2;
-  double latDegExtent = latN - latS;
-
-  for (final frame in image.frames) {
-    var orig = frame.clone(noAnimation: true);
-    double ny = frame.height - 1;
-    int cy = frame.height ~/ 2;
-  
-    for (final newPixel in frame) {
-
-      double normFromCenter = (newPixel.y - cy) / ny; 
-      double latDeg = normFromCenter * latDegExtent + latCenter;
-      double latRad = latDeg * DEG_TO_RAD;
-
-      double newLatRad = 2 * atan(pow(e, latRad)) - pi / 2;
-
-      double srcLatDeg = newLatRad / DEG_TO_RAD - latCenter;
-      double normFromCenterDeg = srcLatDeg / latDegExtent;
-      double origY = normFromCenterDeg * ny + cy;
-
-      final p2 = orig.getPixelInterpolate(
-        newPixel.x - 0.0, 
-        origY, 
-        interpolation: im.Interpolation.linear
-      );
-      newPixel.setRgba(
-        p2.r, 
-        p2.g, 
-        p2.b,
-        p2.a
-      );
-    }
-  }
-  return image;
-}

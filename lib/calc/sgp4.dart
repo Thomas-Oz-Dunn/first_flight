@@ -1660,6 +1660,7 @@ _DspaceResult _deepSpace({
 *    vallado, crawford, hujsak, kelso  2006
 ----------------------------------------------------------------------------*/
 _DsInitResult _deepSpaceInit({
+
   required Planet planet,
   required double cosim,
   required double argp0,

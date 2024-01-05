@@ -1,4 +1,4 @@
-import 'package:first_flight/math.dart';
+import 'package:first_flight/calc/math.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -7,7 +7,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:vector_math/vector_math_64.dart';
 
-import 'sgp4.dart';
+import '../calc/sgp4.dart';
 
 class Orbit {
   final String objectName;
@@ -173,7 +173,7 @@ List<(Vector3, DateTime)> calcMotion(
   int searchMinutes, 
   DateTime now
 ) {
-  // calcmotion
+  // Convert epoch into doublwe
   KeplerianElements elems = KeplerianElements(
     epoch: orbit.epoch, 
     eccentricity: orbit.eccentricity, 

@@ -3,13 +3,13 @@ import 'package:provider/provider.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'favorites_page.dart';
-import 'theme_handle.dart';
-import 'settings_page.dart';
-import 'orbit_page.dart';
-import 'news_page.dart';
-import 'view_page.dart';
-import 'map_page.dart';
+import 'ui/favorites_page.dart';
+import 'mem/theme_handle.dart';
+import 'ui/settings_page.dart';
+import 'ui/orbit_page.dart';
+import 'ui/news_page.dart';
+import 'ui/view_page.dart';
+import 'ui/map_page.dart';
 
 const FAVORITES_KEY = "Favorites";
 const HISTORY_KEY = "History";
@@ -79,6 +79,9 @@ class _MainPageState extends State<MainPage> {
 
   String celestrakSite = "https://celestrak.org/NORAD/elements/gp.php?";
   String celestrakName = "NAME=";
+  String celestrakID = "CATNR=";
+  String celestrakIntDes = "INTDES=";
+
   String celestrakJsonFormat = "&FORMAT=JSON";
   bool emptySearchbar = true;
 
@@ -202,8 +205,14 @@ class _MainPageState extends State<MainPage> {
 
   // Internet
 
-  Future<List<Orbit>> queryCelestrak(String name) {
+  Future<List<Orbit>> queryCelestrakName(String name) {
     String query = celestrakSite + celestrakName + name + celestrakJsonFormat;
+    futureSearchOrbits = fetchOrbits(query);
+    return futureSearchOrbits;
+  }
+
+  Future<List<Orbit>> queryCelestrakID(String objectID) {
+    String query = celestrakSite + celestrakIntDes + objectID + celestrakJsonFormat;
     futureSearchOrbits = fetchOrbits(query);
     return futureSearchOrbits;
   }
@@ -237,7 +246,7 @@ class _MainPageState extends State<MainPage> {
           var buttonOptions = [
             MenuItemButton(
               onPressed: () => setState(() {
-                queryCelestrak(history[backIdx]);
+                queryCelestrakName(history[backIdx]);
                 _searchController.text = history[backIdx];
                 currentPageIndex = 3;
                 Navigator.pop(context);
@@ -341,7 +350,7 @@ class _MainPageState extends State<MainPage> {
               ),
             MenuItemButton(
               onPressed: () => setState(() {
-                _addFavorite(orbits[itemIdxs].objectName);
+                _addFavorite(orbits[itemIdxs].objectID);
               }),
               child: const Text('Favorite'),
               ),
@@ -404,7 +413,7 @@ class _MainPageState extends State<MainPage> {
               if (_searchController.text != "") {
                 emptySearchbar = false;
                 _addToHistory(_searchController.text);
-                queryCelestrak(_searchController.text);
+                queryCelestrakName(_searchController.text);
               } else {
                 setState(() {
                   emptySearchbar = true;
@@ -430,7 +439,7 @@ class _MainPageState extends State<MainPage> {
           } else {
             emptySearchbar = false;
             _addToHistory(value);
-            queryCelestrak(value);
+            queryCelestrakName(value);
           }
         },
       ),
@@ -520,13 +529,17 @@ class _MainPageState extends State<MainPage> {
           var buttonOptions = [
             MenuItemButton(
               onPressed: () => setState(() {
-                // TODO-TD: store list of orbits to be viewed and mapped
+                _addToViewings(orbits[itemIdxs].objectID);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const MapPage()),
+                );
               }),
               child: const Text('Map'),
             ),
             MenuItemButton(
               onPressed: () => setState(() {
-                _addFavorite(orbits[itemIdxs].objectName);
+                _addFavorite(orbits[itemIdxs].objectID);
               }),
               child: const Text('Favorite'),
             ),
@@ -547,8 +560,11 @@ class _MainPageState extends State<MainPage> {
                 subtitle: Text('Epoch Date Time (UTC): ${orbit.epoch}'),
                 trailing: MenuAnchor(
                     menuChildren: buttonOptions,
-                    builder: (BuildContext context, MenuController controller,
-                        Widget? child) {
+                    builder: (
+                      BuildContext context, 
+                      MenuController controller,
+                      Widget? child
+                    ) {
                       var menuButton = IconButton(
                         icon: const Icon(Icons.more_vert),
                         onPressed: () {
@@ -560,10 +576,13 @@ class _MainPageState extends State<MainPage> {
                         },
                       );
                       return menuButton;
-                    }));
+                  }
+                )
+              );
             return orbitTile;
+            }
           }
-        });
+        );
       } else if (snapshot.hasError) {
         return Text('${snapshot.error}');
       }
