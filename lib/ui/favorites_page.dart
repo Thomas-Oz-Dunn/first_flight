@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-const FAVORITES_KEY = "Favorites";
+const favoritesKey = "Favorites";
 
 class FavoritesPage extends StatefulWidget {
   const FavoritesPage({super.key});
@@ -32,10 +32,10 @@ class _FavoritesPageState extends State<FavoritesPage> {
   }
 
   void loadFavorites() {
-    List<String>? savedData = preferences?.getStringList(FAVORITES_KEY);
+    List<String>? savedData = preferences?.getStringList(favoritesKey);
 
     if (savedData == null) {
-      preferences?.setStringList(FAVORITES_KEY, _allFavoritesList);
+      preferences?.setStringList(favoritesKey, _allFavoritesList);
     } else {
       _allFavoritesList = savedData;
       _filteredFavoritesList = _allFavoritesList;
@@ -61,7 +61,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
   }
 
   void _removeFavorite(String name) {
-    preferences?.setStringList(FAVORITES_KEY, _allFavoritesList);
+    preferences?.setStringList(favoritesKey, _allFavoritesList);
     setState(() {
       _allFavoritesList.remove(name);
       _filteredFavoritesList.remove(name);

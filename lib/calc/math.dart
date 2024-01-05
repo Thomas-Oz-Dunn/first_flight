@@ -5,11 +5,16 @@ const RADIUS_EQUATOR = 6.378137e6; // m
 const SURFACE_ECC = 0.08182;
 const ROT_RATE = 7.2921150e-5;
 const AXIAL_TILT = -23.439;
-const J2000_DAY = 2451545.0;
-const J2000_EARTH_MEAN_ANOMALY = 1.98627277778;
-const EARTH_MEAN_ANOMALY_PER_JDAY = 0.00547555711;
-const EARTH_AXIAL_TILT_PET_JDAY = 0.0000004;
+const j2000Day = 2451545.0;
+const j2000EarthMeanAnomaly = 1.98627277778;
+const earthMeanAnomalyPerJday = 0.00547555711;
 
+const double earthAxialTiltPerJday = 0.0000004;
+const double twoPi = pi * 2;
+const double degToRad = pi / 180.0;
+const double _xpdotp = 1440.0 / twoPi; // 229.1831180523293;
+const double secPerHour = 3600;
+const double zeroTol = 1.5e-12;
 
 Vector3 enuToAzelrad(Vector3 pEnu){
     var dis = pEnu.normalize();
@@ -40,7 +45,7 @@ double datetimeToj2000days(DateTime dateTime){
     var seconds = dateTime.second;
     var julianDay = dateToJulianDayNum(year, month, day);
     var siderealTime = (hours + (minutes + seconds / 60) / 60) / 24.0;
-    var j2000Days = julianDay + siderealTime - J2000_DAY;
+    var j2000Days = julianDay + siderealTime - j2000Day;
     return j2000Days;
 }
 
@@ -90,11 +95,11 @@ bool isEclipsedByEarth(
 
 Vector3 calcSunNormEciVec(double j2000Days){
     double meanLonDeg = 280.460 + 0.98560028 * j2000Days;
-    double meanAnom = J2000_EARTH_MEAN_ANOMALY + EARTH_MEAN_ANOMALY_PER_JDAY * j2000Days;
+    double meanAnom = j2000EarthMeanAnomaly + earthMeanAnomalyPerJday * j2000Days;
     double u1deg = 1.9148 * sin(meanAnom);
     double u2deg = 0.02 * sin(2.0 * meanAnom);
     double eclipticLon = (meanLonDeg + u1deg + u2deg) * pi / 180.0;
-    double obliquity = -(AXIAL_TILT + EARTH_AXIAL_TILT_PET_JDAY * j2000Days);
+    double obliquity = -(AXIAL_TILT + earthAxialTiltPerJday * j2000Days);
     double ecixnorm = cos(eclipticLon);
     double eciynorm = sin(eclipticLon) * cos(obliquity);
     double eciznorm = sin(eclipticLon) * sin(obliquity);

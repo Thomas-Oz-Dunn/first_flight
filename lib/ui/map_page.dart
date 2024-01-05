@@ -7,8 +7,12 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
 
-import '../mem/theme_handle.dart';
+import '../mem/preferences.dart';
+import '../mem/orbit.dart';
 import '../calc/map.dart';
+import '../calc/orbit.dart';
+import '../web/celestrak.dart';
+
 
 class MapPage extends StatefulWidget {
   const MapPage({super.key});
@@ -28,8 +32,11 @@ class _MapPageState extends State<MapPage> {
   FileImage imageProvider = FileImage(File('lib/world_light_pollution_mercator.png'));
 
   late Future<Position> futurePosition;
-  LatLng defaultLatLon = const LatLng(0, 0);
+  late Future<List<String>> futureOrbitNames;
+  late Future<List<Orbit>> futureOrbitViews;
 
+  LatLng defaultLatLon = const LatLng(0, 0);
+  int nextDay = 60*60*24;
   bool defaultLocateFidelityHigh = false;
   bool isHiFiLocate = false;
   bool lightPollution = true;
@@ -57,10 +64,10 @@ class _MapPageState extends State<MapPage> {
   }
 
   void loadLocationFidelity(){
-    bool? savedData = preferences?.getBool(LOCATION_KEY);
+    bool? savedData = preferences?.getBool(locationKey);
 
     if (savedData == null) {
-      preferences?.setBool(LOCATION_KEY, defaultLocateFidelityHigh);
+      preferences?.setBool(locationKey, defaultLocateFidelityHigh);
       isHiFiLocate = defaultLocateFidelityHigh;
     } else {
       isHiFiLocate = savedData;
@@ -95,29 +102,34 @@ class _MapPageState extends State<MapPage> {
     super.initState();
   }
 
+
   @override
   Widget build(context) {
     runProjection();
+    futureOrbitNames = getViewableOrbitIDs();
+    futureOrbitNames.then(
+      (value) {
+        value.map(
+          (e) {futureOrbitViews = queryCelestrakID(e);}
+        );
+      }
+    );
 
-    passes = [
-      const [LatLng(45, 45), LatLng(50, 41), LatLng(70, 30)],
-      const [LatLng(-20, 0), LatLng(20, 0)],
-      const [LatLng(0, -20), LatLng(0, 20)],
-    ];
-    // queryCelestrak(name)
-    // Iterable iterable = json.decode(response.body);
-    // return List<Orbit>.from(
-    //   iterable.map(
-    //     (contents) {
-    //       return Orbit.fromJson(contents);
-    //     }
-    //   )
-    // )
-    // var nextDay = 60*60*24
-    // for orbit in orbits{}
-    // calcGroundTrack(calcMotion(orbit, nextDay, DateTime.now()));
-    // TODO-TD: Calculate overpasses of favorites and views
-
+    futureOrbitViews.then(
+      (value) => value.map(
+        (orbit) { 
+          passes = calcGroundTrack(
+            calcMotion(
+              orbit, 
+              nextDay, 
+              DateTime.now()
+            )
+          ).map(
+            (e) => e.$1
+          ) as List<List<LatLng>>;
+        }
+      )
+    );
 
     var mapPage = Scaffold(
       appBar: AppBar(

@@ -1,11 +1,8 @@
-import 'package:first_flight/main.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:provider/provider.dart';
 
-import '../mem/theme_handle.dart';
-
-const EMAIL_KEY = "email";
+import '../mem/preferences.dart';
 
 class SettingsPage extends StatefulWidget {
   // Settings page
@@ -51,21 +48,21 @@ class _SettingsPageState extends State<SettingsPage> {
 
   void _updateEmail(name) {
     email = name;
-    preferences?.setString(EMAIL_KEY, email);
+    preferences?.setString(emailKey, email);
     setState(() {});
   }
 
   void _updateLocationFidelity(bool value) {
     isHiFiLocate = value;
-    preferences?.setString(LOCATION_KEY, email);
+    preferences?.setString(locationKey, email);
     setState(() {});
   }
 
   void _loadEmail() {
-    String? savedData = preferences?.getString(EMAIL_KEY);
+    String? savedData = preferences?.getString(emailKey);
 
     if (savedData == null) {
-      preferences?.setString(EMAIL_KEY, defaultEmail);
+      preferences?.setString(emailKey, defaultEmail);
     } else {
       email = savedData;
     }
@@ -74,10 +71,10 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   void loadLocationFidelity(){
-    bool? savedData = preferences?.getBool(LOCATION_KEY);
+    bool? savedData = preferences?.getBool(locationKey);
 
     if (savedData == null) {
-      preferences?.setBool(LOCATION_KEY, defaultLocateFidelityHigh);
+      preferences?.setBool(locationKey, defaultLocateFidelityHigh);
       isHiFiLocate = defaultLocateFidelityHigh;
     } else {
       isHiFiLocate = savedData;
@@ -87,7 +84,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
   void _removeEmail() {
     email = defaultEmail;
-    preferences?.setString(EMAIL_KEY, defaultEmail);
+    preferences?.setString(emailKey, defaultEmail);
     setState(() {});
   }
 
@@ -157,7 +154,7 @@ class _SettingsPageState extends State<SettingsPage> {
       trailing: IconButton(
         icon: const Icon(Icons.delete_forever_sharp),
         onPressed: () async {
-          await preferences?.remove(HISTORY_KEY);
+          await preferences?.remove(historyKey);
           setState(() {});
         },
       )
@@ -170,7 +167,7 @@ class _SettingsPageState extends State<SettingsPage> {
       trailing: IconButton(
         icon: const Icon(Icons.delete_forever_sharp),
         onPressed: () async {
-          await preferences?.remove(FAVORITES_KEY);
+          await preferences?.remove(favoritesKey);
           setState(() {});
         },
       )

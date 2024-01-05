@@ -1,11 +1,7 @@
 import 'dart:math';
 import 'package:vector_math/vector_math_64.dart';
 
-const double twoPi = pi * 2;
-const double deg2rad = pi / 180.0;
-const double _xpdotp = 1440.0 / twoPi; // 229.1831180523293;
-const double secPerHour = 3600;
-const double zeroTol = 1.5e-12;
+import 'math.dart';
 
 class OrbitalState {
   const OrbitalState(this.pEci, this.vEci);
@@ -126,10 +122,10 @@ class SGP4 {
     meanMotion0 = keplerianElements.meanMotion / _xpdotp;
     bstar = keplerianElements.drag;
 
-    incO = keplerianElements.inclination * deg2rad;
-    raan0 = keplerianElements.raan * deg2rad;
-    argp0 = keplerianElements.argPeri * deg2rad;
-    meanAnom0 = keplerianElements.meanAnomaly * deg2rad;
+    incO = keplerianElements.inclination * degToRad;
+    raan0 = keplerianElements.raan * degToRad;
+    argp0 = keplerianElements.argPeri * degToRad;
+    meanAnom0 = keplerianElements.meanAnomaly * degToRad;
     ecc0 = keplerianElements.eccentricity;
 
     var year = keplerianElements.epoch ~/ 1000.0;
@@ -1359,7 +1355,7 @@ double _gstime(double jdut1) {
       (0.093104 * tut1 * tut1) +
       (((876600.0 * secPerHour) + 8640184.812866) * tut1) +
       67310.54841; // # sec
-  temp = temp * deg2rad / 240.0 % twoPi; // 360/86400 = 1/240, to deg, to rad
+  temp = temp * degToRad / 240.0 % twoPi; // 360/86400 = 1/240, to deg, to rad
 
   //  ------------------------ check quadrants ---------------------
   if (temp < 0.0) {

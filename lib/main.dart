@@ -3,17 +3,15 @@ import 'package:provider/provider.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'mem/preferences.dart';
+import 'mem/orbit.dart';
+import 'web/celestrak.dart';
 import 'ui/favorites_page.dart';
-import 'mem/theme_handle.dart';
 import 'ui/settings_page.dart';
 import 'ui/orbit_page.dart';
 import 'ui/news_page.dart';
 import 'ui/view_page.dart';
 import 'ui/map_page.dart';
-
-const FAVORITES_KEY = "Favorites";
-const HISTORY_KEY = "History";
-const viewingsKey = "Viewings";
 
 enum SampleItem { load, favorite, remove, share }
 
@@ -77,12 +75,6 @@ class _MainPageState extends State<MainPage> {
   late Future<List<Orbit>> futureSearchOrbits;
   late Future<List<Orbit>> futureExploreOrbits;
 
-  String celestrakSite = "https://celestrak.org/NORAD/elements/gp.php?";
-  String celestrakName = "NAME=";
-  String celestrakID = "CATNR=";
-  String celestrakIntDes = "INTDES=";
-
-  String celestrakJsonFormat = "&FORMAT=JSON";
   bool emptySearchbar = true;
 
   final TextEditingController _searchController = TextEditingController();
@@ -142,10 +134,10 @@ class _MainPageState extends State<MainPage> {
   }
 
   void loadFavorites() {
-    List<String>? savedData = preferences?.getStringList(FAVORITES_KEY);
+    List<String>? savedData = preferences?.getStringList(favoritesKey);
 
     if (savedData == null) {
-      preferences?.setStringList(FAVORITES_KEY, favorites);
+      preferences?.setStringList(favoritesKey, favorites);
     } else {
       favorites = savedData;
     }
@@ -153,10 +145,10 @@ class _MainPageState extends State<MainPage> {
   }
 
   void loadHistory() {
-    List<String>? savedData = preferences?.getStringList(HISTORY_KEY);
+    List<String>? savedData = preferences?.getStringList(historyKey);
 
     if (savedData == null) {
-      preferences?.setStringList(HISTORY_KEY, history);
+      preferences?.setStringList(historyKey, history);
     } else {
       history = savedData;
     }
@@ -176,13 +168,13 @@ class _MainPageState extends State<MainPage> {
 
   void _addFavorite(name) {
     favorites.add(name);
-    preferences?.setStringList(FAVORITES_KEY, favorites);
+    preferences?.setStringList(favoritesKey, favorites);
     setState(() {});
   }
 
   void _addToHistory(name) {
     history.add(name);
-    preferences?.setStringList(HISTORY_KEY, history);
+    preferences?.setStringList(historyKey, history);
     setState(() {});
   }
 
@@ -194,7 +186,7 @@ class _MainPageState extends State<MainPage> {
 
   void _removeFromHistory(name) {
     history.remove(name);
-    preferences?.setStringList(HISTORY_KEY, history);
+    preferences?.setStringList(historyKey, history);
     setState(() {});
   }
 
@@ -204,18 +196,6 @@ class _MainPageState extends State<MainPage> {
   }
 
   // Internet
-
-  Future<List<Orbit>> queryCelestrakName(String name) {
-    String query = celestrakSite + celestrakName + name + celestrakJsonFormat;
-    futureSearchOrbits = fetchOrbits(query);
-    return futureSearchOrbits;
-  }
-
-  Future<List<Orbit>> queryCelestrakID(String objectID) {
-    String query = celestrakSite + celestrakIntDes + objectID + celestrakJsonFormat;
-    futureSearchOrbits = fetchOrbits(query);
-    return futureSearchOrbits;
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -246,7 +226,7 @@ class _MainPageState extends State<MainPage> {
           var buttonOptions = [
             MenuItemButton(
               onPressed: () => setState(() {
-                queryCelestrakName(history[backIdx]);
+                futureSearchOrbits = queryCelestrakName(history[backIdx]);
                 _searchController.text = history[backIdx];
                 currentPageIndex = 3;
                 Navigator.pop(context);
@@ -413,7 +393,7 @@ class _MainPageState extends State<MainPage> {
               if (_searchController.text != "") {
                 emptySearchbar = false;
                 _addToHistory(_searchController.text);
-                queryCelestrakName(_searchController.text);
+                futureSearchOrbits = queryCelestrakName(_searchController.text);
               } else {
                 setState(() {
                   emptySearchbar = true;
@@ -439,7 +419,7 @@ class _MainPageState extends State<MainPage> {
           } else {
             emptySearchbar = false;
             _addToHistory(value);
-            queryCelestrakName(value);
+            futureSearchOrbits = queryCelestrakName(value);
           }
         },
       ),

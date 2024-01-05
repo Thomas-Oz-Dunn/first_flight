@@ -7,11 +7,9 @@ import 'dart:ui' as ui;
 class SkyBox extends StatefulWidget {
   final ui.Image image;
 
-  /// The field of view of the sky box.
   final double fov;
-  /// The perspective of the sky box.
   final double perspective;
-  /// The sensitivity of the sky box panning.
+  /// Sensitivity of panning.
   final double sensitivity;
   /// The child widget.
   /// This widget will be drawn on top of the sky box.

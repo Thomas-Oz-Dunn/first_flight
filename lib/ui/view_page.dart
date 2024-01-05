@@ -2,7 +2,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 
-import 'package:first_flight/calc/skybox.dart';
+import '../calc/skybox.dart';
 
 class ViewPage extends StatefulWidget {
   const ViewPage({super.key});

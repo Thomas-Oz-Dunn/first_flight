@@ -1,19 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-const THEME_KEY = "theme_key";
-const LOCATION_KEY = "LocationFidelity";
+const themeKey = "theme_key";
+const locationKey = "LocationFidelity";
+const favoritesKey = "Favorites";
+const historyKey = "History";
+const viewingsKey = "Viewings";
+const emailKey = "email";
 
 class MyPreferences {
 
   void setTheme(bool value) async {
     SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
-    sharedPreferences.setBool(THEME_KEY, value);
+    sharedPreferences.setBool(themeKey, value);
   }
 
   Future<bool> getTheme() async {
     SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
-    return sharedPreferences.getBool(THEME_KEY) ?? false;
+    return sharedPreferences.getBool(themeKey) ?? false;
   }
 }
 
@@ -40,4 +44,23 @@ class ModelThemeProvider extends ChangeNotifier {
     _isDark = await _preferences.getTheme();
     notifyListeners();
   }
+}
+
+
+Future<List<String>> getViewableOrbitIDs() async {
+  SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
+
+  List<String> viewable = [];
+  List<String>? savedData = sharedPreferences.getStringList(favoritesKey);
+
+  if (savedData != null) {
+    viewable += savedData;
+  }
+  
+  List<String>? viewData = sharedPreferences.getStringList(viewingsKey);
+  if (viewData != null) {
+    viewable += viewData;
+  }
+
+  return viewable;
 }

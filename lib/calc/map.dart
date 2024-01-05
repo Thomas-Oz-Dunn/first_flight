@@ -4,9 +4,7 @@ import 'package:image/image.dart' as im;
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 
-import 'package:first_flight/ui/orbit_page.dart';
-
-const DEG_TO_RAD = pi / 180;
+import 'math.dart';
 
 
 PolylineLayer generateTrajectoryLayer(
@@ -44,11 +42,11 @@ im.Image projectMercatorImage(
 
       double normFromCenter = (newPixel.y - cy) / ny; 
       double latDeg = normFromCenter * latDegExtent + latCenter;
-      double latRad = latDeg * DEG_TO_RAD;
+      double latRad = latDeg * degToRad;
 
       double newLatRad = 2 * atan(pow(e, latRad)) - pi / 2;
 
-      double srcLatDeg = newLatRad / DEG_TO_RAD - latCenter;
+      double srcLatDeg = newLatRad / degToRad - latCenter;
       double normFromCenterDeg = srcLatDeg / latDegExtent;
       double origY = normFromCenterDeg * ny + cy;
 
